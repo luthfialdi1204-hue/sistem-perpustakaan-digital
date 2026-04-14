@@ -5,6 +5,10 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ListBarangController;
 use App\Http\Controllers\LoginController;
 
+Route::get('/', function () {
+      return view ('welcome');
+   });
+
 Route::prefix('admin')->group(function () {
    Route::get('/dashboard', function () {
       return 'Admin Dashboard';
@@ -30,3 +34,7 @@ Route::get('/dashboard', function (){
 Route::get('/list_barang', function (){
    return view('list_barang');
 });
+
+Route::get('/Landing_Page', function () {
+      return view ('Landing_Page');
+   });
