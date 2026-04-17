@@ -39,4 +39,8 @@ Route::view('/Halaman_Masuk', 'Halaman_Masuk');
 
 Route::view('/Katalog_Buku', 'Katalog_Buku');
 
-Route::view('/Beranda_Mahasiswa', 'Beranda_Mahasiswa');
+Route::view('/Beranda_Mahasiswa', 'Beranda_Mahasiswa');  
+
+Route::get('/app', function () {
+return view('app');
+});
