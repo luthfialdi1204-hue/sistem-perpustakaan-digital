@@ -1,114 +1,67 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Perpustakaan Digital</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perpustakaan Digital</title>
 
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Tailwind + Flowbite -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.css" rel="stylesheet" />
 
-  <style>
-    body {
-      background-color: #f5f5f5;
-    }
-
-    .hero {
-      background-color: #9CEDFF;
-      padding: 60px 0;
-    }
-
-    .about {
-      background-color: #ffffff;
-      padding: 50px 0;
-    }
-
-    .books {
-      background-color: #9CEDFF ;
-      padding: 50px 0;
-    }
-
-    .card img {
-      height: 200px;
-      object-fit: cover;
-    }
-
-    footer {
-      background: black;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
-  </style>
 </head>
-<body>
+
+<body class="bg-gray-100">
 
 <!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color:#2f4f8f;">
-  <div class="container">
-    <img src="{{ asset('storage/Logo Polibatam.png') }}" width="50">
-
-    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="menu">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="#">Beranda</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Tentang</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Koleksi Buku</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Masuk</a></li>
-      </ul>
+<nav class="fixed w-full z-50 bg-blue-800">
+  <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+    <img src="{{ asset('images/Logo Polibatam.png') }}" class="w-12">
+    
+    <div class="space-x-6 text-white hidden md:flex">
+      <a href="#beranda">Beranda</a>
+      <a href="#tentang">Tentang</a>
+      <a href="#buku">Koleksi Buku</a>
+      <a href="Halaman_Masuk">Masuk</a>
     </div>
   </div>
 </nav>
 
 <!-- HERO -->
-<section class="hero">
-  <div class="container">
-    <div class="row align-items-center">
-      
-      <div class="col-md-6">
-        <h2 class="fw-bold text-primary">
-          Perpustakaan Digital <br> Platform PERRRPUS
-        </h2>
-        <p>
-          Akses literasi tanpa batas, hanya dalam genggamanmu.<br>
-          Membawa pengetahuan ke era digital.
-        </p>
-      </div>
-
-      <div class="col-md-6 text-center">
-        <img src="{{ asset('storage/img1.png') }}" width="300">
-
-      </div>
-
+<section id="beranda" class="bg-cyan-200 pt-24 pb-16">
+  <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-2 items-center">
+    
+    <div>
+      <h2 class="text-3xl font-bold text-blue-600 mb-2">
+        Perpustakaan Digital PERRRPUS
+      </h2>
+      <p>Akses literasi tanpa batas.</p>
     </div>
+
+    <div class="text-center">
+      <img src="{{ asset('images/landingpage2.png') }}" class="mx-auto w-72">
+    </div>
+
   </div>
 </section>
 
 <!-- ABOUT -->
-<section class="about text-center">
-  <div class="container">
-    <h4 class="fw-bold">Apa Itu Perpustakaan Digital Platform PERRRPUS?</h4>
-    <p class="mb-4">Tak kenal maka tak sayang, kenalan dulu yuk platform kami!</p>
+<section id="tentang" class="bg-white py-16 text-center">
+  <div class="max-w-6xl mx-auto px-4">
+    <h4 class="text-xl font-bold mb-6">Tentang</h4>
 
-    <div class="row justify-content-center align-items-center">
+    <div class="grid md:grid-cols-2 items-center gap-6">
       
-      <div class="col-md-4 text-center">
-        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135768.png" width="150">
+      <div>
+        <img src="{{ asset('images/landingpage1.png') }}" class="mx-auto w-64">
       </div>
 
-      <div class="col-md-6">
-        <div class="p-3 rounded" style="background:#d9edf3;">
-          <p>
-            Platform ini merupakan sistem digital yang menyediakan berbagai layanan literasi seperti e-book,
-            jurnal, dan sumber pengetahuan lainnya.
-          </p>
-          <p>
-            Dengan platform ini, pengguna dapat membaca dan mengakses informasi kapan saja dan di mana saja
-            dengan mudah.
-          </p>
+      <div class="space-y-3 text-left">
+        <div class="p-4 bg-gray-100 rounded">
+          Platform perpustakaan digital modern.
+        </div>
+        <div class="p-4 bg-gray-100 rounded">
+          Mudah digunakan semua kalangan.
         </div>
       </div>
 
@@ -116,66 +69,123 @@
   </div>
 </section>
 
-<!-- KOLEKSI BUKU -->
-<section class="books text-center">
-  <div class="container">
-    <h4 class="fw-bold mb-4">Koleksi Buku Digital</h4>
+<!-- KOLEKSI -->
+<section id="buku" class="bg-cyan-200 py-16 text-center">
+  <div class="max-w-7xl mx-auto px-4">
+    <h4 class="text-xl font-bold mb-6">Koleksi Buku</h4>
 
-    <div class="row g-4">
-
-      <!-- CARD -->
-      <div class="col-6 col-md-3">
-        <div class="card shadow-sm">
-          <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg" class="card-img-top">
-          <div class="card-body">
-            <h6>Atomic Habits</h6>
-            <button class="btn btn-primary btn-sm w-100">Detail</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- DUPLIKASI CARD -->
-      <div class="col-6 col-md-3">
-        <div class="card shadow-sm">
-          <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg" class="card-img-top">
-          <div class="card-body">
-            <h6>Atomic Habits</h6>
-            <button class="btn btn-primary btn-sm w-100">Detail</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6 col-md-3">
-        <div class="card shadow-sm">
-          <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg" class="card-img-top">
-          <div class="card-body">
-            <h6>Atomic Habits</h6>
-            <button class="btn btn-primary btn-sm w-100">Detail</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6 col-md-3">
-        <div class="card shadow-sm">
-          <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg" class="card-img-top">
-          <div class="card-body">
-            <h6>Atomic Habits</h6>
-            <button class="btn btn-primary btn-sm w-100">Detail</button>
-          </div>
-        </div>
-      </div>
-
+    <div id="book-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <script>
+        document.write(`
+          ${Array(16).fill(`
+            <div class="bg-white rounded-lg shadow p-3">
+              <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg" class="w-full h-40 object-cover rounded">
+              <h6 class="mt-2 font-semibold">Atomic Habits</h6>
+              <button 
+                data-modal-target="detailModal"
+                data-modal-toggle="detailModal"
+                class="mt-2 w-full bg-blue-600 text-white py-1 rounded">
+                Detail
+              </button>
+            </div>
+          `).join('')}
+        `);
+      </script>
     </div>
+
+    <!-- PAGINATION -->
+    <div class="flex justify-center mt-6 space-x-2">
+      <button onclick="loadPage(1)" id="page-1" class="px-3 py-1 bg-blue-600 text-white rounded">1</button>
+      <button onclick="loadPage(2)" id="page-2" class="px-3 py-1 bg-gray-300 rounded">2</button>
+    </div>
+
   </div>
 </section>
+
+<!-- MODAL -->
+<div id="detailModal" tabindex="-1" class="hidden fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full p-5 relative">
+    
+    <button data-modal-hide="detailModal" class="absolute top-2 right-2">✖</button>
+
+    <h5 class="text-lg font-bold mb-4">Detail Buku</h5>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg" class="w-full rounded">
+
+      <div>
+        <h5 class="font-bold">Atomic Habits</h5>
+        <p><b>Pengarang:</b> James Clear</p>
+        <p><b>Penerbit:</b> Avery</p>
+        <p><b>Tahun:</b> 2018</p>
+        <p><b>Deskripsi:</b> Buku tentang kebiasaan kecil yang berdampak besar.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <!-- FOOTER -->
-<footer>
-  <p>Copyright © 2025 Outrent. All Rights Reserved</p>
+<footer class="bg-blue-800 text-white pt-10 pb-4">
+  <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-6 text-left">
+
+    <div>
+      <h5 class="font-bold">PERRRPUS</h5>
+      <p>Platform perpustakaan digital modern</p>
+    </div>
+
+    <div>
+      <h6 class="font-semibold">Menu</h6>
+      <a href="#beranda" class="block">Beranda</a>
+      <a href="#tentang" class="block">Tentang</a>
+      <a href="#buku" class="block">Buku</a>
+    </div>
+
+    <div>
+      <h6 class="font-semibold">Kontak</h6>
+      <p>Batam, Indonesia</p>
+    </div>
+
+    <div>
+      <h6 class="font-semibold">Lokasi</h6>
+      <iframe src="https://www.google.com/maps?q=Politeknik+Negeri+Batam&output=embed" class="w-full h-32 rounded"></iframe>
+    </div>
+
+  </div>
+
+  <div class="text-center mt-6">
+    © <span id="year"></span> PERRRPUS
+  </div>
 </footer>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
+
+function loadPage(page){
+  const container = document.getElementById("book-container");
+
+  if(page === 2){
+    container.innerHTML = `
+      ${Array(16).fill(`
+        <div class="bg-white rounded-lg shadow p-3">
+          <img src="https://m.media-amazon.com/images/I/71UwSHSZRnS.jpg" class="w-full h-40 object-cover rounded">
+          <h6 class="mt-2 font-semibold">Rich Dad Poor Dad</h6>
+          <button 
+            data-modal-target="detailModal"
+            data-modal-toggle="detailModal"
+            class="mt-2 w-full bg-blue-600 text-white py-1 rounded">
+            Detail
+          </button>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    location.reload();
+  }
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
 
 </body>
 </html>
