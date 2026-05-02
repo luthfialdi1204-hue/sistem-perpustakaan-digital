@@ -30,7 +30,10 @@
 <!-- HEADER -->
 <div class="flex justify-between items-center mb-4">
   <h5 class="font-bold text-lg">Katalog Buku</h5>
-  <div>Nama Pengguna 👤</div>
+  <a href="/Profil_Pengguna"
+      class="font-semibold flex items-center gap-2 hover:text-blue-600">
+      Nama Pengguna 👤
+  </a>
 </div>
 
 <!-- SEARCH -->

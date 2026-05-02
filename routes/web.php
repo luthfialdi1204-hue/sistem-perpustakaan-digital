@@ -7,7 +7,7 @@ use App\Http\Controllers\BarangController;
 
 
 Route::get('/', function () {
-      return view ('welcome');
+      return view ('Landing_Page');
    });
 
 Route::prefix('admin')->group(function () {
@@ -39,7 +39,15 @@ Route::view('/Halaman_Masuk', 'Halaman_Masuk');
 
 Route::view('/Katalog_Buku', 'Katalog_Buku');
 
-Route::view('/Beranda_Mahasiswa', 'Beranda_Mahasiswa');  
+Route::view('/Beranda_Mahasiswa', 'Beranda_Mahasiswa');
+
+Route::view('/Riwayat_Peminjaman', 'Riwayat_Peminjaman');
+
+Route::view('/Profil_Pengguna', 'Profil_Pengguna');
+
+Route::view('/Dashboard_Admin', 'Dashboard_Admin');
+
+Route::view('/Profil_Admin', 'Profil_Admin');
 
 Route::get('/app', function () {
 return view('app');

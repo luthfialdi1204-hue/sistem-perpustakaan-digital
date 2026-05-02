@@ -31,7 +31,10 @@
 <!-- TOP -->
 <div class="flex justify-between items-center mb-6">
   <h5 class="font-bold text-lg">Beranda</h5>
-  <div>Nama Pengguna 👤</div>
+  <a href="/Profil_Pengguna"
+      class="font-semibold flex items-center gap-2 hover:text-blue-600">
+      Nama Pengguna 👤
+  </a>
 </div>
 
 <!-- WELCOME -->
