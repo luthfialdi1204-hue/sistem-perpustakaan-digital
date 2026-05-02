@@ -1,69 +1,50 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard</title>
+@extends('layouts.mahasiswa')
 
-<!-- Tailwind + Flowbite -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.css" rel="stylesheet" />
+@section('title', 'Dashboard')
+@section('active_page', 'beranda')
+@section('page_title', 'Beranda')
+@section('page_subtitle', 'Pantau aktivitas peminjaman buku Anda di sini.')
 
-</head>
-
-<body class="bg-gray-100">
-
-<!-- SIDEBAR -->
-<div class="fixed top-0 left-0 h-screen w-56 bg-blue-900 text-white">
-  <div class="text-center p-5">
-    <img src="{{ asset('images/logo Polibatam.png') }}" class="w-16 mx-auto"><br>
-    <small>Perpustakaan Digital</small>
-  </div>
-
-  <a href="Beranda_Mahasiswa" class="block px-5 py-3 hover:bg-blue-700">Beranda</a>
-  <a href="Katalog_Buku" class="block px-5 py-3 hover:bg-blue-700">Katalog Buku</a>
-  <a href="Riwayat_Peminjaman" class="block px-5 py-3 hover:bg-blue-700">Riwayat Peminjaman</a>
-</div>
-
-<!-- CONTENT -->
-<div class="ml-56 p-6">
-
-<!-- TOP -->
-<div class="flex justify-between items-center mb-6">
-  <h5 class="font-bold text-lg">Beranda</h5>
-  <a href="/Profil_Pengguna"
-      class="font-semibold flex items-center gap-2 hover:text-blue-600">
-      Nama Pengguna 👤
-  </a>
-</div>
-
+@section('content')
 <!-- WELCOME -->
-<div class="bg-blue-300 text-white p-5 rounded-xl mb-6">
-  <h6 class="mb-1 font-semibold">Selamat Datang, Luthfi Dwi Apriyadi!!</h6>
-  <small>Senin, 29 Maret 2026</small>
+<div class="mb-6 rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-600 p-6 text-white shadow-lg">
+  <h2 class="mb-1 text-xl font-semibold">Selamat Datang, Luthfi Dwi Apriyadi</h2>
+  <p class="text-sm text-blue-100">Senin, 29 Maret 2026</p>
 </div>
 
 <!-- INFO -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-  <div class="bg-blue-300 text-white p-4 rounded-xl text-center">1<br>Total Peminjaman</div>
-  <div class="bg-blue-300 text-white p-4 rounded-xl text-center">1<br>Sedang Dipinjam</div>
-  <div class="bg-blue-300 text-white p-4 rounded-xl text-center">1<br>Sudah Dikembalikan</div>
-  <div class="bg-blue-300 text-white p-4 rounded-xl text-center">1<br>Terlambat</div>
+<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <p class="text-sm text-slate-500">Total Peminjaman</p>
+    <p class="mt-2 text-2xl font-bold text-slate-800">1</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <p class="text-sm text-slate-500">Sedang Dipinjam</p>
+    <p class="mt-2 text-2xl font-bold text-blue-700">1</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <p class="text-sm text-slate-500">Sudah Dikembalikan</p>
+    <p class="mt-2 text-2xl font-bold text-emerald-600">1</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <p class="text-sm text-slate-500">Terlambat</p>
+    <p class="mt-2 text-2xl font-bold text-rose-600">1</p>
+  </div>
 </div>
 
 <!-- DIPINJAM -->
-<div class="bg-white rounded-xl shadow mb-6">
-  <div class="p-4 font-bold border-b">Buku Yang Sedang Dipinjam</div>
-  <div class="p-4 flex items-center">
-    <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg" class="w-24">
+<div class="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <div class="border-b border-slate-100 p-4 font-semibold">Buku Yang Sedang Dipinjam</div>
+  <div class="flex items-center p-4">
+    <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg" class="w-24 rounded-lg object-cover shadow-sm">
     
     <div class="ml-4">
-      <h6 class="font-semibold">Tentang Kamu</h6>
-      <small>Tere Liye</small><br>
-      <small>Pinjam: 23 Maret 2026</small><br>
-      <small>Kembali: 30 Maret 2026</small><br>
+      <h3 class="font-semibold text-slate-800">Tentang Kamu</h3>
+      <p class="text-sm text-slate-500">Tere Liye</p>
+      <p class="text-sm text-slate-500">Pinjam: 23 Maret 2026</p>
+      <p class="text-sm text-slate-500">Kembali: 30 Maret 2026</p>
 
-      <span class="bg-yellow-400 text-black px-2 py-1 rounded text-xs">
+      <span class="mt-2 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
         Sedang Dipinjam
       </span>
     </div>
@@ -71,23 +52,15 @@
 </div>
 
 <!-- REKOMENDASI -->
-<div class="bg-white rounded-xl shadow">
-  <div class="p-4 font-bold border-b">Rekomendasi Buku Untuk Anda</div>
+<div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <div class="border-b border-slate-100 p-4 font-semibold">Rekomendasi Buku Untuk Anda</div>
 
-  <div class="p-4 grid grid-cols-2 md:grid-cols-6 gap-3" id="rekomendasi-container"></div>
+  <div class="grid grid-cols-2 gap-3 p-4 md:grid-cols-3 xl:grid-cols-6" id="rekomendasi-container"></div>
 </div>
+@endsection
 
-<!-- FOOTER -->
-<div class="text-center mt-6 text-gray-500">
-  © <span id="year"></span> PERRRPUS | Politeknik Negeri Batam
-</div>
-
-</div>
-
-<!-- SCRIPT -->
+@push('scripts')
 <script>
-document.getElementById("year").textContent = new Date().getFullYear();
-
 const books = [
   {title:"Atomic Habits", img:"https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg", available:true},
   {title:"Rich Dad Poor Dad", img:"https://m.media-amazon.com/images/I/71UwSHSZRnS.jpg", available:true},
@@ -114,18 +87,14 @@ const container = document.getElementById("rekomendasi-container");
 
 rekomendasi.forEach(book => {
   container.innerHTML += `
-    <div class="bg-white rounded-lg shadow p-2 text-center hover:scale-105 transition">
-      <img src="${book.img}" class="w-full h-28 object-cover rounded">
-      <small class="block mt-1">${book.title}</small>
-      <button class="mt-2 w-full bg-blue-600 text-white text-xs py-1 rounded">
+    <div class="rounded-xl border border-slate-200 bg-white p-2 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+      <img src="${book.img}" class="h-32 w-full rounded-lg object-cover">
+      <small class="mt-2 block font-medium text-slate-700">${book.title}</small>
+      <button class="mt-2 w-full rounded-lg bg-blue-600 py-1.5 text-xs text-white hover:bg-blue-700 transition">
         Detail
       </button>
     </div>
   `;
 });
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
-
-</body>
-</html>
+@endpush

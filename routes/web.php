@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\BarangController;
-
+use App\Http\Controllers\ProductController;
 
 Route::prefix('admin')->group(function () {
    Route::get('/dashboard', function () {
@@ -31,19 +31,31 @@ Route::get('/Landing_Page', function () {
 
 Route::get('/barang',[BarangController::class,'tampilkan'] ); 
 
-Route::view('/Halaman_Masuk', 'Halaman_Masuk');
+Route::get('/Halaman_Masuk', function () {
+      return view ('Halaman_Masuk');
+   });
 
-Route::view('/Katalog_Buku', 'Katalog_Buku');
+Route::get('/Katalog_Buku', function () {
+      return view ('Mahasiswa.Katalog_Buku');
+   });
 
-Route::view('/Beranda_Mahasiswa', 'Beranda_Mahasiswa');
+Route::get('/Beranda_Mahasiswa', function () {
+      return view ('Mahasiswa.Beranda_Mahasiswa');
+   });
 
-Route::view('/Riwayat_Peminjaman', 'Riwayat_Peminjaman');
+Route::get('/Riwayat_Peminjaman', function () {
+      return view ('Mahasiswa.Riwayat_Peminjaman');
+   });
 
-Route::view('/Profil_Pengguna', 'Profil_Pengguna');
+Route::get('/Profil_Pengguna', function () {
+      return view ('Mahasiswa.Profil_Pengguna');
+   });
 
 Route::view('/Dashboard_Admin', 'Dashboard_Admin');
 
 Route::view('/Profil_Admin', 'Profil_Admin');
+
+Route::get('/Product',[ProductController::class,'tampilkan'] ); 
 
 Route::get('/app', function () {
 return view('app');
