@@ -6,10 +6,6 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\BarangController;
 
 
-Route::get('/', function () {
-      return view ('Landing_Page');
-   });
-
 Route::prefix('admin')->group(function () {
    Route::get('/dashboard', function () {
       return 'Admin Dashboard';
