@@ -1,137 +1,95 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profil Pengguna</title>
+@extends('layouts.mahasiswa')
 
-<!-- Tailwind + Flowbite -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.css" rel="stylesheet" />
+@section('title', 'Profil Pengguna')
+@section('active_page', '')
+@section('page_title', 'Profil Pengguna')
+@section('page_subtitle', 'Kelola informasi akun Anda.')
 
-</head>
-
-<body class="bg-slate-100 text-slate-800">
-
-<!-- SIDEBAR -->
-<div class="fixed top-0 left-0 h-screen w-64 bg-slate-900 text-white shadow-xl">
-  <div class="border-b border-slate-700 text-center p-6">
-    <img src="{{ asset('images/poltek.png') }}" class="w-16 mx-auto">
-    <p class="mt-3 text-sm text-slate-200">Perpustakaan Digital</p>
-  </div>
-
-  <div class="p-3 space-y-2">
-    <a href="/Beranda_Mahasiswa" class="block rounded-lg px-4 py-3 text-slate-200 hover:bg-slate-800 transition">Beranda</a>
-    <a href="/Katalog_Buku" class="block rounded-lg px-4 py-3 text-slate-200 hover:bg-slate-800 transition">Katalog Buku</a>
-    <a href="/Riwayat_Peminjaman" class="block rounded-lg px-4 py-3 text-slate-200 hover:bg-slate-800 transition">Riwayat Peminjaman</a>
-  </div>
-</div>
-
-<!-- CONTENT -->
-<div class="ml-64 min-h-screen p-6 md:p-8">
-  <!-- TOP -->
-  <div class="mb-6 flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold">Profil Pengguna</h1>
-      <p class="text-sm text-slate-500">Kelola informasi akun Anda.</p>
-    </div>
-
-    <div class="relative">
-      <button id="userMenuButton" type="button"
-        class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 shadow-sm hover:shadow transition">
-        <span class="font-medium text-gray-800">Nama Pengguna</span>
-        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-semibold">
-          NP
-        </div>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+@section('content')
+<div class="flex min-h-[calc(100vh-12rem)] justify-center px-2 py-4">
+  <div class="w-full max-w-3xl rounded-[28px] border border-slate-300 bg-slate-200/95 p-8 shadow-lg md:p-10">
+    <div class="mb-8 text-center">
+      <div class="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full border-[3px] border-slate-900 text-slate-900">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
-      </button>
-
-      <div id="userDropdown"
-        class="hidden absolute right-0 mt-2 w-44 rounded-xl border border-slate-200 bg-white py-2 shadow-lg z-50">
-        <a href="#" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition text-sm">Profil</a>
-        <a href="/Landing_Page" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition text-sm text-red-500">Keluar</a>
       </div>
+      <h2 class="text-2xl font-bold text-slate-900 md:text-3xl">Nama Pengguna</h2>
     </div>
-  </div>
 
-  <!-- MAIN -->
-  <div class="flex justify-center">
+    <div class="mb-2">
+      <h3 class="mb-4 text-lg font-semibold text-slate-800">Informasi Akun</h3>
 
-    <div class="w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div class="space-y-4">
+        <div class="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-md shadow-slate-300/40">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Pengguna</p>
+          <p class="mt-1 text-base font-semibold text-slate-900">Luthfi Dwi Apriyaldi</p>
+        </div>
 
-      <!-- PROFILE HEADER -->
-      <div class="mb-6 text-center">
-        <div class="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-700">NP</div>
-        <h2 class="text-2xl font-bold">Nama Pengguna</h2>
-      </div>
+        <div class="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-md shadow-slate-300/40">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">NIM</p>
+          <p class="mt-1 text-base font-semibold text-slate-900">3312501077</p>
+        </div>
 
-      <!-- INFORMASI -->
-      <div class="mb-5">
-        <h3 class="mb-4 text-lg font-semibold">Informasi Akun</h3>
-
-        <div class="space-y-4">
-
-          <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium">
-            Nama Pengguna : Luthfi Dwi Aprialdy
+        <div class="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-md shadow-slate-300/40">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kata Sandi</p>
+          <div class="mt-1 flex items-center justify-between gap-3">
+            <p id="profilePasswordDisplay" class="min-w-0 flex-1 text-base font-semibold text-slate-900" data-plain="www">••••••</p>
+            <button type="button" id="profilePasswordToggle"
+              class="shrink-0 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+              aria-label="Tampilkan kata sandi" aria-pressed="false">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 icon-eye" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon-eye-off hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.289m7.633 7.634l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              </svg>
+            </button>
           </div>
+        </div>
 
-          <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium">
-            Nim : 3312501077
-          </div>
+        <div class="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-md shadow-slate-300/40">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tipe Keanggotaan</p>
+          <p class="mt-1 text-base font-semibold text-slate-900">Mahasiswa</p>
+        </div>
 
-          <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium">
-            Kata Sandi : www
-          </div>
-
-          <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium">
-            Tipe Keanggotaan : Mahasiswa
-          </div>
-
-          <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium">
-            Email : luthfi@gmail.com
-          </div>
-
+        <div class="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-md shadow-slate-300/40">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</p>
+          <p class="mt-1 text-base font-semibold text-slate-900">luthfi@gmail.com</p>
         </div>
       </div>
-
-      <!-- BUTTON -->
-      <div class="flex justify-end mt-8">
-        <a href="/Beranda_Mahasiswa"
-           class="rounded-lg bg-slate-500 px-6 py-2 text-sm font-medium text-white hover:bg-slate-600 transition">
-          Kembali
-        </a>
-      </div>
-
     </div>
 
+    <div class="mt-8 flex justify-end">
+      <a href="/Beranda_Mahasiswa"
+        class="rounded-full border-2 border-slate-900 bg-slate-300 px-8 py-2.5 text-base font-bold text-slate-900 shadow-sm hover:bg-slate-400 transition">
+        Kembali
+      </a>
+    </div>
   </div>
-
-  <!-- FOOTER -->
-  <div class="mt-6 text-center text-sm text-gray-500">
-    © <span id="year"></span> PERRRPUS | Politeknik Negeri Batam
-  </div>
-
 </div>
+@endsection
 
-<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
-
+@push('scripts')
 <script>
-const userMenuButton = document.getElementById('userMenuButton');
-const userDropdown = document.getElementById('userDropdown');
-document.getElementById("year").textContent = new Date().getFullYear();
-
-userMenuButton.addEventListener('click', () => {
-    userDropdown.classList.toggle('hidden');
-});
-
-window.addEventListener('click', function(e) {
-    if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
-        userDropdown.classList.add('hidden');
-    }
-});
+(function () {
+  const display = document.getElementById('profilePasswordDisplay');
+  const btn = document.getElementById('profilePasswordToggle');
+  if (!display || !btn) return;
+  const plain = display.getAttribute('data-plain') || '';
+  const masked = '••••••';
+  const eye = btn.querySelector('.icon-eye');
+  const eyeOff = btn.querySelector('.icon-eye-off');
+  let shown = false;
+  btn.addEventListener('click', function () {
+    shown = !shown;
+    display.textContent = shown ? plain : masked;
+    btn.setAttribute('aria-pressed', shown ? 'true' : 'false');
+    btn.setAttribute('aria-label', shown ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+    eye.classList.toggle('hidden', shown);
+    eyeOff.classList.toggle('hidden', !shown);
+  });
+})();
 </script>
-
-</body>
-</html>
+@endpush

@@ -51,9 +51,29 @@ Route::get('/Profil_Pengguna', function () {
       return view ('Mahasiswa.Profil_Pengguna');
    });
 
-Route::view('/Dashboard_Admin', 'Dashboard_Admin');
+Route::get('/Dashboard_Admin', function () {
+      return view ('Admin.Dashboard_Admin');
+   });
 
-Route::view('/Profil_Admin', 'Profil_Admin');
+Route::get('/Kelola_Buku', function () {
+      return view ('Admin.Kelola_Buku_admin');
+   });
+
+Route::get('/Kelola_Anggota', function () {
+      return view ('Admin.kelola_anggota_admin');
+   });
+
+Route::get('/Kelola_Peminjaman', function () {
+      return view('Admin.kelola_peminjaman');
+   });
+
+Route::get('/Laporan_Admin', function () {
+      return view('Admin.laporan_admin');
+   });
+
+Route::get('/Profil_Admin', function () {
+      return view('Admin.Profil_Admin');
+   });
 
 Route::get('/Product',[ProductController::class,'tampilkan'] ); 
 

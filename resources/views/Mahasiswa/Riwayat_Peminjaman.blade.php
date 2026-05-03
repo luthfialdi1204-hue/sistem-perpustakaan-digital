@@ -52,7 +52,7 @@
 
   <!-- HEADER TABLE -->
   <div class="grid min-w-[980px] grid-cols-7 bg-slate-50 p-4 text-sm font-bold border-b border-slate-200">
-    <div>Kode Transaksi</div>
+    <div>Kode Buku</div>
     <div>Buku</div>
     <div>Tentang</div>
     <div>Tanggal Pinjam</div>
@@ -100,9 +100,12 @@
     </div>
 
     <div>
-      <button onclick="openModal()"
-              class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700 transition">
-        👁
+      <button type="button" onclick="openModal()" title="Lihat detail"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500 text-white shadow-sm hover:bg-sky-600 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
       </button>
     </div>
   </div>
@@ -138,9 +141,12 @@
     </div>
 
     <div>
-      <button onclick="openModal()"
-              class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700 transition">
-        👁
+      <button type="button" onclick="openModal()" title="Lihat detail"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500 text-white shadow-sm hover:bg-sky-600 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
       </button>
     </div>
   </div>
@@ -173,9 +179,12 @@
     </div>
 
     <div>
-      <button onclick="openModal()"
-              class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700 transition">
-        👁
+      <button type="button" onclick="openModal()" title="Lihat detail"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500 text-white shadow-sm hover:bg-sky-600 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
       </button>
     </div>
   </div>
