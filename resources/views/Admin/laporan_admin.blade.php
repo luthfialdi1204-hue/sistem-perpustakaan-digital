@@ -66,8 +66,27 @@
           <option value="all">Semua Status</option>
           <option value="Dipinjam">Dipinjam</option>
           <option value="Dikembalikan">Dikembalikan</option>
-          <option value="Pending">Pending</option>
+          <option value="Menunggu konfirmasi">Menunggu konfirmasi</option>
         </select>
+      </div>
+
+      <div class="flex flex-col justify-end md:col-span-12 md:flex-row md:justify-end">
+        <div class="relative mt-3 md:mt-0">
+          <button type="button" id="exportAllDataBtn"
+            class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition md:w-auto">
+            Ekspor Data
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div id="exportAllDropdown"
+            class="absolute right-0 z-20 mt-1 hidden w-52 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+            <button type="button" id="exportAllPdfBtn"
+              class="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 transition">Export PDF</button>
+            <button type="button" id="exportAllExcelBtn"
+              class="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 transition">Export Excel (CSV)</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -142,7 +161,7 @@
           <label class="mb-1 block text-xs font-semibold text-slate-600">Status</label>
           <select id="detailStatus" disabled
             class="w-full cursor-not-allowed rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-800">
-            <option value="Pending">Pending</option>
+            <option value="Menunggu konfirmasi">Menunggu konfirmasi</option>
             <option value="Dipinjam">Dipinjam</option>
             <option value="Dikembalikan">Dikembalikan</option>
           </select>
@@ -256,7 +275,7 @@ const reportRows = [
     dueIso: '2026-03-30',
     telat: '0 Hari',
     denda: '0 RP',
-    status: 'Pending',
+    status: 'Menunggu konfirmasi',
     cover: 'https://m.media-amazon.com/images/I/81af+MCATTL.jpg',
   },
 ];
@@ -266,7 +285,7 @@ let currentDetailRow = null;
 function statusBadgeClass(status) {
   if (status === 'Dipinjam') return 'bg-emerald-500 text-white';
   if (status === 'Dikembalikan') return 'bg-orange-500 text-white';
-  if (status === 'Pending') return 'bg-emerald-200 text-emerald-900';
+  if (status === 'Menunggu konfirmasi') return 'bg-emerald-200 text-emerald-900';
   return 'bg-slate-200 text-slate-800';
 }
 
@@ -327,12 +346,15 @@ const statusEl = document.getElementById('reportStatus');
 const detailModal = document.getElementById('reportDetailModal');
 const exportDropdown = document.getElementById('exportDropdown');
 const exportDataBtn = document.getElementById('exportDataBtn');
+const exportAllDataBtn = document.getElementById('exportAllDataBtn');
+const exportAllDropdown = document.getElementById('exportAllDropdown');
 
 function openDetail(id) {
   const row = reportRows.find((r) => r.id === id);
   if (!row) return;
   currentDetailRow = row;
   exportDropdown.classList.add('hidden');
+  exportAllDropdown.classList.add('hidden');
 
   document.getElementById('detailMember').value = row.member;
   document.getElementById('detailBookCode').value = row.bookCode;
@@ -434,6 +456,83 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function toggleExportAllMenu() {
+  exportAllDropdown.classList.toggle('hidden');
+}
+
+function closeExportAllMenu() {
+  exportAllDropdown.classList.add('hidden');
+}
+
+/** Ekspor semua data peminjaman (reportRows), tidak terpengaruh filter tabel */
+function exportAllExcel() {
+  const headers = ['Anggota', 'Judul Buku', 'Pengarang', 'Kode Buku', 'Kategori', 'Tanggal Pinjam', 'Tanggal Kembali', 'Status', 'Penerbit', 'Telat', 'Denda'];
+  const lines = [headers.map(csvEscape).join(',')];
+  reportRows.forEach((row) => {
+    const cols = [
+      row.member,
+      row.bookTitle,
+      row.bookAuthor,
+      row.bookCode,
+      row.category,
+      formatDisplayDate(row.borrowIso),
+      formatDisplayDate(row.dueIso),
+      row.status,
+      row.publisher,
+      row.telat,
+      row.denda,
+    ];
+    lines.push(cols.map(csvEscape).join(','));
+  });
+  const csv = '\uFEFF' + lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `laporan-peminjaman-semua-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeExportAllMenu();
+}
+
+function exportAllPdf() {
+  const rowsHtml = reportRows.map((row) => `
+    <tr>
+      <td>${escapeHtml(row.member)}</td>
+      <td>${escapeHtml(row.bookTitle)}</td>
+      <td>${escapeHtml(row.bookAuthor)}</td>
+      <td>${escapeHtml(formatDisplayDate(row.borrowIso))}</td>
+      <td>${escapeHtml(formatDisplayDate(row.dueIso))}</td>
+      <td>${escapeHtml(row.status)}</td>
+    </tr>`).join('');
+  const html = `<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Laporan Peminjaman — Semua Data</title>
+    <style>
+      body{font-family:system-ui,sans-serif;padding:24px;color:#1e293b;font-size:13px;}
+      h1{font-size:18px;margin:0 0 8px;}
+      p.note{font-size:12px;color:#64748b;margin-bottom:16px;}
+      table{border-collapse:collapse;width:100%;}
+      th,td{padding:8px 10px;border:1px solid #e2e8f0;text-align:left;}
+      th{background:#fce7f3;font-weight:600;font-size:12px;}
+    </style></head><body>
+    <h1>Laporan Peminjaman</h1>
+    <p class="note">Semua data peminjaman (${reportRows.length} entri)</p>
+    <table>
+      <thead><tr>
+        <th>Anggota</th><th>Buku</th><th>Pengarang</th><th>Tanggal pinjam</th><th>Tanggal Kembali</th><th>Status</th>
+      </tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    </body></html>`;
+  const w = window.open('', '_blank');
+  if (w) {
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 300);
+  }
+  closeExportAllMenu();
+}
+
 function render() {
   const kw = (searchEl.value || '').toLowerCase().trim();
   const cat = catEl.value;
@@ -469,9 +568,20 @@ exportDataBtn.addEventListener('click', (e) => {
 });
 document.getElementById('exportPdfBtn').addEventListener('click', () => exportDetailPdf());
 document.getElementById('exportExcelBtn').addEventListener('click', () => exportDetailExcel());
+
+exportAllDataBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  toggleExportAllMenu();
+});
+document.getElementById('exportAllPdfBtn').addEventListener('click', () => exportAllPdf());
+document.getElementById('exportAllExcelBtn').addEventListener('click', () => exportAllExcel());
+
 document.addEventListener('click', (e) => {
   if (!exportDropdown.classList.contains('hidden') && !e.target.closest('#exportDataBtn') && !e.target.closest('#exportDropdown')) {
     closeExportMenu();
+  }
+  if (!exportAllDropdown.classList.contains('hidden') && !e.target.closest('#exportAllDataBtn') && !e.target.closest('#exportAllDropdown')) {
+    closeExportAllMenu();
   }
 });
 detailModal.addEventListener('click', (e) => {

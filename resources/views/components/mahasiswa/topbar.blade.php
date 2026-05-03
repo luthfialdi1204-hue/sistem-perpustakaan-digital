@@ -23,8 +23,8 @@
 
     <div id="userDropdown"
       class="hidden absolute right-0 mt-2 w-44 rounded-xl border border-slate-200 bg-white py-2 shadow-lg z-50">
-      <a href="Profil_Pengguna" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition text-sm">Profil</a>
-      <a href="Landing_Page" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition text-sm text-red-500">Keluar</a>
+      <a href="Profil_Mahasiswa" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition text-sm">Profil</a>
+      <a href="/" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition text-sm text-red-500">Keluar</a>
     </div>
   </div>
 </div>

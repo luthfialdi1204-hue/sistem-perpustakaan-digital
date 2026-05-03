@@ -119,7 +119,7 @@
           <label class="mb-1 block text-xs font-semibold text-slate-600">Status</label>
           <select id="modalStatus"
             class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
-            <option value="Pending">Pending</option>
+            <option value="Menunggu konfirmasi">Menunggu konfirmasi</option>
             <option value="Dipinjam">Dipinjam</option>
             <option value="Dikembalikan">Dikembalikan</option>
           </select>
@@ -231,7 +231,7 @@ const loans = [
     dueIso: '2026-03-30',
     telat: '0 Hari',
     denda: '0 RP',
-    status: 'Pending',
+    status: 'Menunggu konfirmasi',
     cover: 'https://m.media-amazon.com/images/I/81af+MCATTL.jpg',
   },
 ];
@@ -246,7 +246,7 @@ function loanDueDisplay(row) {
 function statusBadgeClass(status) {
   if (status === 'Dipinjam') return 'bg-emerald-500 text-white';
   if (status === 'Dikembalikan') return 'bg-orange-500 text-white';
-  if (status === 'Pending') return 'bg-emerald-200 text-emerald-900';
+  if (status === 'Menunggu konfirmasi') return 'bg-emerald-200 text-emerald-900';
   if (status === 'Ditolak') return 'bg-red-500 text-white';
   return 'bg-slate-200 text-slate-800';
 }
@@ -258,7 +258,7 @@ function memberInitials(name) {
 }
 
 function actionCell(row) {
-  if (row.status === 'Pending') {
+  if (row.status === 'Menunggu konfirmasi') {
     return `
       <div class="flex items-center justify-center gap-2">
         <button type="button" title="Setujui" data-action="approve" data-loan-id="${row.id}"
@@ -375,14 +375,14 @@ function saveModalToLoan() {
 
 function approveLoan(loanId) {
   const row = loans.find((l) => l.id === loanId);
-  if (!row || row.status !== 'Pending') return;
+  if (!row || row.status !== 'Menunggu konfirmasi') return;
   row.status = 'Dipinjam';
   render();
 }
 
 function rejectLoan(loanId) {
   const row = loans.find((l) => l.id === loanId);
-  if (!row || row.status !== 'Pending') return;
+  if (!row || row.status !== 'Menunggu konfirmasi') return;
   row.status = 'Ditolak';
   render();
 }

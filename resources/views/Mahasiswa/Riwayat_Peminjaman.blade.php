@@ -10,28 +10,28 @@
 <!-- HEADER -->
 <div class="mb-6 rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-600 p-6 text-white shadow-lg">
   <h2 class="text-xl font-semibold">Riwayat Peminjaman Buku</h2>
-  <p class="mt-1 text-sm text-blue-100">Pantau status pinjaman, keterlambatan, dan detail transaksi Anda.</p>
+  <p class="mt-1 text-sm text-blue-100">Lihat status setiap pinjaman, perkiraan keterlambatan, dan kapan transaksi dicatat.</p>
 </div>
 
 <!-- INFO -->
 <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
   <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Total Peminjaman</p>
+    <p class="text-sm text-slate-500">Jumlah seluruh riwayat pinjam</p>
     <p class="mt-2 text-2xl font-bold text-slate-800">3</p>
   </div>
 
   <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Sedang Dipinjam</p>
+    <p class="text-sm text-slate-500">Buku masih di tangan Anda</p>
     <p class="mt-2 text-2xl font-bold text-blue-700">2</p>
   </div>
 
   <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Sudah Dikembalikan</p>
+    <p class="text-sm text-slate-500">Sudah dikembalikan ke perpustakaan</p>
     <p class="mt-2 text-2xl font-bold text-emerald-600">0</p>
   </div>
 
   <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Terlambat</p>
+    <p class="text-sm text-slate-500">Melewati batas waktu kembali</p>
     <p class="mt-2 text-2xl font-bold text-rose-600">1</p>
   </div>
 </div>
@@ -47,43 +47,38 @@
   </select>
 </div>
 
-<!-- TABLE -->
+<!-- DAFTAR RIWAYAT -->
 <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <p class="border-b border-slate-200 px-4 py-3 text-sm font-medium text-slate-600">Daftar Riwayat peminjaman</p>
 
   <!-- HEADER TABLE -->
-  <div class="grid min-w-[980px] grid-cols-7 bg-slate-50 p-4 text-sm font-bold border-b border-slate-200">
-    <div>Kode Buku</div>
+  <div class="grid min-w-[880px] grid-cols-6 bg-slate-50 p-4 text-sm font-bold border-b border-slate-200">
     <div>Buku</div>
-    <div>Tentang</div>
-    <div>Tanggal Pinjam</div>
+    <div>Informasi</div>
+    <div>Tanggal pinjam</div>
     <div>Tanggal Kembali</div>
     <div>Status</div>
     <div>Aksi</div>
   </div>
 
   <!-- ITEM 1 -->
-  <div class="grid min-w-[980px] grid-cols-7 gap-4 border-b border-slate-100 p-4 text-sm items-start">
-    <div>
-      <strong>BPKSJ124</strong><br>
-      <small>23/03/2026 16:03</small>
-    </div>
-
+  <div class="grid min-w-[880px] grid-cols-6 gap-4 border-b border-slate-100 p-4 text-sm items-start">
     <div>
       <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg"
-           class="w-20 rounded-lg shadow-sm">
+           class="w-20 rounded-lg shadow-sm" alt="">
     </div>
 
     <div>
       <h6 class="font-semibold text-slate-800">Tentang Kamu</h6>
-      <small>Tere Liye</small><br><br>
+      <small class="text-slate-500">Tere Liye</small><br><br>
 
       <strong>BPKSJ124</strong><br>
-      <small>23/Maret/2026</small><br>
-      <small>29/Maret/2026</small><br>
+      <span class="text-slate-700">23/Maret/2026 – 30/Maret/2026</span><br>
 
-      <span class="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700">
+      <span class="mt-1 inline-block rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700">
         Sedang Dipinjam
-      </span>
+      </span><br>
+      <small class="text-slate-500">23/03/2026 16:03</small>
     </div>
 
     <div>23/Maret/2026</div>
@@ -111,27 +106,30 @@
   </div>
 
   <!-- ITEM 2 -->
-  <div class="grid min-w-[980px] grid-cols-7 gap-4 border-b border-slate-100 p-4 text-sm items-start">
-    <div>
-      <strong>BPKSJ124</strong><br>
-      <small>23/03/2026 16:03</small>
-    </div>
-
+  <div class="grid min-w-[880px] grid-cols-6 gap-4 border-b border-slate-100 p-4 text-sm items-start">
     <div>
       <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg"
-           class="w-20 rounded-lg shadow-sm">
+           class="w-20 rounded-lg shadow-sm" alt="">
     </div>
 
     <div>
       <h6 class="font-semibold text-slate-800">Tentang Kamu</h6>
-      <small>Tere Liye</small>
+      <small class="text-slate-500">Tere Liye</small><br><br>
+
+      <strong>BPKSJ124</strong><br>
+      <span class="text-slate-700">23/Maret/2026 – 30/Maret/2026</span><br>
+
+      <span class="mt-1 inline-block rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700">
+        Sedang Dipinjam
+      </span><br>
+      <small class="text-slate-500">23/03/2026 16:03</small>
     </div>
 
     <div>23/Maret/2026</div>
 
     <div>
       30/Maret/2026<br>
-      <span class="text-green-500">1 hari lagi</span>
+      <span class="text-green-500">1 hari Lagi</span>
     </div>
 
     <div>
@@ -152,20 +150,23 @@
   </div>
 
   <!-- ITEM 3 -->
-  <div class="grid min-w-[980px] grid-cols-7 gap-4 p-4 text-sm items-start">
-    <div>
-      <strong>BPKSJ124</strong><br>
-      <small>23/03/2026 16:03</small>
-    </div>
-
+  <div class="grid min-w-[880px] grid-cols-6 gap-4 p-4 text-sm items-start">
     <div>
       <img src="https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg"
-           class="w-20 rounded-lg shadow-sm">
+           class="w-20 rounded-lg shadow-sm" alt="">
     </div>
 
     <div>
       <h6 class="font-semibold text-slate-800">Tentang Kamu</h6>
-      <small>Tere Liye</small>
+      <small class="text-slate-500">Tere Liye</small><br><br>
+
+      <strong>BPKSJ124</strong><br>
+      <span class="text-slate-700">23/Maret/2026 – 30/Maret/2026</span><br>
+
+      <span class="mt-1 inline-block rounded-full bg-slate-200 px-2 py-1 text-xs text-slate-700">
+        Menunggu Konfirmasi
+      </span><br>
+      <small class="text-slate-500">23/03/2026 16:03</small>
     </div>
 
     <div>23/Maret/2026</div>
@@ -174,7 +175,7 @@
 
     <div>
       <span class="rounded-full bg-slate-200 px-2 py-1 text-xs text-slate-700">
-        Pending
+        Menunggu Konfirmasi
       </span>
     </div>
 
