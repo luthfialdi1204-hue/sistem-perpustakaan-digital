@@ -7,7 +7,8 @@
 
 <!-- Tailwind + Flowbite -->
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.css" rel="stylesheet" />
+@include('partials.head-theme')
+@include('partials.flowbite-assets')
 
 <style>
   html { scroll-behavior: smooth; }
@@ -18,15 +19,16 @@
 <body class="bg-gray-100">
 
 <!-- NAVBAR -->
-<nav id="navbar" class="fixed top-0 left-0 w-full z-50 bg-blue-800 transition-all duration-300">
+<nav id="navbar" class="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-[#152a52] to-[#1E376E] shadow-lg">
   <div class="max-w-7xl mx-auto px-6 flex justify-between items-center h-16">
-    <img src="{{ asset('images/poltek.png') }}" class="w-12 object-contain" alt="Logo">
-    
-    <div class="space-x-6 text-white hidden md:flex">
-      <a href="#beranda" class="hover:text-yellow-300 transition">Beranda</a>
-      <a href="#tentang" class="hover:text-yellow-300 transition">Tentang</a>
-      <a href="#buku" class="hover:text-yellow-300 transition">Koleksi Buku</a>
-      <a href="Halaman_Masuk" class="hover:text-yellow-300 transition">Masuk</a>
+    <a href="#beranda" class="flex items-center gap-2">
+      <img src="{{ asset('images/poltek.png') }}" class="w-10 object-contain" alt="Logo">
+      <span class="font-bold text-white hidden sm:inline"><i class="bi bi-book-half text-amber-400"></i> PERRRPUS</span>
+    </a>
+    <div class="gap-1 text-white hidden md:flex items-center">
+      <a href="#beranda" class="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-amber-300 transition"><i class="bi bi-house"></i> Beranda</a>
+      <a href="#tentang" class="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-amber-300 transition"><i class="bi bi-info-circle"></i> Tentang</a>
+      <a href="#buku" class="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-amber-300 transition"><i class="bi bi-journal-bookmark"></i> Koleksi</a>
     </div>
   </div>
 </nav>
@@ -56,12 +58,11 @@
       </p>
 
       <div class="mt-6 flex gap-4">
-        <a href="#buku" class="bg-yellow-400 text-[#1E376E] px-6 py-3 rounded-lg font-semibold hover:bg-yellow-300 transition">
-          Jelajahi Buku
+        <a href="#buku" class="inline-flex items-center gap-2 bg-amber-400 text-[#1E376E] px-6 py-3 rounded-xl font-semibold hover:bg-amber-300 transition shadow-lg">
+          <i class="bi bi-search"></i> Jelajahi Buku
         </a>
-
-        <a href="Halaman_Masuk" class="border border-white text-white px-6 py-3 rounded-lg hover:bg-white hover:text-[#1E376E] transition">
-          Masuk
+        <a href="{{ route('login.form') }}" class="inline-flex items-center gap-2 border-2 border-white text-white px-6 py-3 rounded-xl hover:bg-white hover:text-[#1E376E] transition">
+          <i class="bi bi-box-arrow-in-right"></i> Masuk
         </a>
       </div>
 
@@ -228,9 +229,9 @@
     <!-- KONTAK -->
     <div>
       <h6 class="font-semibold mb-3 text-white">Kontak</h6>
-      <p class="text-white/90">📍 Batam, Indonesia</p>
-      <p class="text-white/90 mt-2">✉️ info@perrrpus.com</p>
-      <p class="text-white/90 mt-2">📞 +62 812-3456-7890</p>
+      <p class="text-white/90 flex items-center gap-2"><i class="bi bi-geo-alt text-amber-400"></i> Batam, Indonesia</p>
+      <p class="text-white/90 mt-2 flex items-center gap-2"><i class="bi bi-envelope text-amber-400"></i> info@perrrpus.com</p>
+      <p class="text-white/90 mt-2 flex items-center gap-2"><i class="bi bi-telephone text-amber-400"></i> +62 812-3456-7890</p>
     </div>
 
     <!-- LOKASI -->
@@ -340,7 +341,6 @@ document.getElementById("year").textContent = new Date().getFullYear();
 loadPage(1);
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
 
 </body>
 </html>

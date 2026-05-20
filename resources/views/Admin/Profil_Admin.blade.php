@@ -3,87 +3,123 @@
 @section('title', 'Profil Pengguna')
 @section('active_page', 'profil')
 @section('page_title', 'Profil Pengguna')
+@section('page_subtitle', 'Kelola informasi akun admin Anda.')
 
 @section('content')
-<div class="flex min-h-[calc(100vh-12rem)] justify-center px-2 py-4">
-  <div class="w-full max-w-3xl rounded-[28px] border border-slate-300 bg-slate-200/95 p-8 shadow-lg md:p-10">
-    <div class="mb-8 text-center">
-      <div class="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full border-[3px] border-slate-900 text-slate-900">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
+@php
+  /** @var \App\Models\User $user */
+  $user = auth()->user();
+  $name = $user?->name ?? '—';
+  $email = $user?->email ?? '—';
+  $nip = $user?->nip ?? '—';
+  $initials = collect(preg_split('/\s+/', trim((string) $name)))
+    ->filter()
+    ->take(2)
+    ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
+    ->join('');
+  $initials = $initials !== '' ? $initials : 'AD';
+@endphp
+<div class="mx-auto max-w-4xl space-y-6">
+
+  <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-md">
+    <div class="bg-gradient-to-br from-brand via-brand-light to-teal-600 relative px-6 py-8 md:px-8">
+      <div class="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10"></div>
+      <div class="pointer-events-none absolute -bottom-12 left-1/3 h-32 w-32 rounded-full bg-amber-400/10"></div>
+
+      <div class="relative flex flex-col items-center gap-4 sm:flex-row sm:items-end sm:gap-6">
+        <div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border-4 border-white/30 bg-white/15 text-3xl font-bold text-white shadow-lg backdrop-blur-sm">
+          {{ $initials }}
+        </div>
+        <div class="text-center sm:text-left">
+          <p class="text-xs font-medium uppercase tracking-wider text-amber-300/90">Akun Admin</p>
+          <h2 class="mt-1 text-2xl font-bold text-white md:text-3xl">{{ $name }}</h2>
+          <p class="mt-1 text-sm text-blue-100">NIP {{ $nip }} · {{ $email }}</p>
+        </div>
+        <span class="sm:ml-auto inline-flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+          <i class="bi bi-check-circle-fill"></i> Aktif
+        </span>
       </div>
-      <h2 class="text-2xl font-bold text-slate-900 md:text-3xl">Nama Pengguna</h2>
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+    <div class="flex items-center gap-2 border-b border-slate-200 bg-gradient-to-r from-[#1E376E]/8 to-teal-500/10 px-5 py-3.5">
+      <i class="bi bi-person-badge text-[#1E376E]"></i>
+      <h3 class="font-semibold text-[#1E376E]">Informasi Akun</h3>
     </div>
 
-    <div class="mb-2">
-      <h3 class="mb-4 text-lg font-semibold text-slate-800">Informasi Akun</h3>
-
-      <div class="space-y-4">
-        <div class="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-md shadow-slate-300/40">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Pengguna</p>
-          <p class="mt-1 text-base font-semibold text-slate-900">Luthfi Dwi Apriyaldi</p>
+    <div class="grid gap-4 p-5 sm:grid-cols-2">
+      <div class="flex gap-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition hover:border-[#1E376E]/20 hover:shadow-sm">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1E376E]/10 text-[#1E376E]">
+          <i class="bi bi-person text-lg"></i>
         </div>
+        <div class="min-w-0">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Pengguna</p>
+          <p class="mt-0.5 font-semibold text-slate-800">{{ $name }}</p>
+        </div>
+      </div>
 
-        <div class="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-md shadow-slate-300/40">
+      <div class="flex gap-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition hover:border-[#1E376E]/20 hover:shadow-sm">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-700">
+          <i class="bi bi-hash text-lg"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">NIP</p>
+          <p class="mt-0.5 font-semibold text-slate-800">{{ $nip }}</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition hover:border-[#1E376E]/20 hover:shadow-sm sm:col-span-2">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700">
+          <i class="bi bi-shield-lock text-lg"></i>
+        </div>
+        <div class="min-w-0 flex-1">
           <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kata Sandi</p>
-          <div class="mt-1 flex items-center justify-between gap-3">
-            <p id="profilePasswordDisplay" class="min-w-0 flex-1 text-base font-semibold text-slate-900" data-plain="www">••••••</p>
-            <button type="button" id="profilePasswordToggle"
-              class="shrink-0 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
-              aria-label="Tampilkan kata sandi" aria-pressed="false">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 icon-eye" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon-eye-off hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.289m7.633 7.634l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-              </svg>
-            </button>
+          <div class="mt-0.5 flex items-center justify-between gap-3">
+            <p class="font-semibold text-slate-800">••••••••</p>
+            <span class="text-xs font-medium text-slate-500">Tidak dapat ditampilkan</span>
           </div>
         </div>
+      </div>
 
-        <div class="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-md shadow-slate-300/40">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tipe Keanggotaan</p>
-          <p class="mt-1 text-base font-semibold text-slate-900">Admin</p>
+      <div class="flex gap-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition hover:border-[#1E376E]/20 hover:shadow-sm">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-700">
+          <i class="bi bi-shield-check text-lg"></i>
         </div>
+        <div class="min-w-0">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tipe Keanggotaan</p>
+          <p class="mt-0.5">
+            <span class="inline-flex items-center gap-1 rounded-md bg-[#1E376E] px-2.5 py-0.5 text-sm font-semibold text-white">
+              <i class="bi bi-shield-fill-check text-xs"></i> Admin
+            </span>
+          </p>
+        </div>
+      </div>
 
-        <div class="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-md shadow-slate-300/40">
+      <div class="flex gap-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition hover:border-[#1E376E]/20 hover:shadow-sm">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-700">
+          <i class="bi bi-envelope text-lg"></i>
+        </div>
+        <div class="min-w-0">
           <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</p>
-          <p class="mt-1 text-base font-semibold text-slate-900">luthfi@gmail.com</p>
+          <p class="mt-0.5 truncate font-semibold text-slate-800">{{ $email }}</p>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="mt-8 flex justify-end">
-      <a href="/Dashboard_Admin"
-        class="rounded-full border-2 border-slate-900 bg-slate-300 px-8 py-2.5 text-base font-bold text-slate-900 shadow-sm hover:bg-slate-400 transition">
-        Kembali
-      </a>
-    </div>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <a href="{{ route('admin.dashboard') }}"
+      class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+      <i class="bi bi-arrow-left"></i> Kembali ke Beranda
+    </a>
+    <form method="POST" action="{{ route('logout') }}">
+      @csrf
+      <button type="submit"
+        class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-110">
+        <i class="bi bi-box-arrow-left"></i> Keluar
+      </button>
+    </form>
   </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-(function () {
-  const display = document.getElementById('profilePasswordDisplay');
-  const btn = document.getElementById('profilePasswordToggle');
-  if (!display || !btn) return;
-  const plain = display.getAttribute('data-plain') || '';
-  const masked = '••••••';
-  const eye = btn.querySelector('.icon-eye');
-  const eyeOff = btn.querySelector('.icon-eye-off');
-  let shown = false;
-  btn.addEventListener('click', function () {
-    shown = !shown;
-    display.textContent = shown ? plain : masked;
-    btn.setAttribute('aria-pressed', shown ? 'true' : 'false');
-    btn.setAttribute('aria-label', shown ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
-    eye.classList.toggle('hidden', shown);
-    eyeOff.classList.toggle('hidden', !shown);
-  });
-})();
-</script>
-@endpush

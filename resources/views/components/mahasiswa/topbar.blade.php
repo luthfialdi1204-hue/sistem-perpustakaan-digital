@@ -5,26 +5,37 @@
 
 <div class="mb-6 flex items-center justify-between">
   <div>
-    <h1 class="text-2xl font-bold">{{ $title }}</h1>
+    <h1 class="flex items-center gap-2 text-2xl font-bold text-brand">
+      <i class="bi bi-grid-1x2-fill text-xl text-teal-600"></i>
+      {{ $title }}
+    </h1>
     @if ($subtitle)
-      <p class="text-sm text-slate-500">{{ $subtitle }}</p>
+      <p class="mt-0.5 flex items-center gap-1 text-sm text-slate-500"><i class="bi bi-info-circle text-slate-400"></i>{{ $subtitle }}</p>
     @endif
   </div>
 
-  <div class="relative">
-    <button id="userMenuButton" type="button"
-      class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 shadow-sm hover:shadow transition">
-      <span class="font-medium text-gray-800">Nama Pengguna</span>
-      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-semibold">NP</div>
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-      </svg>
-    </button>
-
-    <div id="userDropdown"
-      class="hidden absolute right-0 mt-2 w-44 rounded-xl border border-slate-200 bg-white py-2 shadow-lg z-50">
-      <a href="Profil_Mahasiswa" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition text-sm">Profil</a>
-      <a href="/" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition text-sm text-red-500">Keluar</a>
-    </div>
+  <button id="dropdownMahasiswaButton" type="button"
+    data-dropdown-toggle="dropdownMahasiswa" data-dropdown-placement="bottom-end"
+    class="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 shadow-sm backdrop-blur transition hover:shadow-md">
+    <span>Mahasiswa</span>
+    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand to-teal-600 text-xs font-bold text-white">NP</span>
+    <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+  </button>
+  <div id="dropdownMahasiswa" class="z-50 hidden w-48 divide-y divide-gray-100 rounded-xl border border-slate-200 bg-white shadow-xl">
+    <ul class="py-1 text-sm text-slate-700">
+      <li>
+        <a href="{{ route('mahasiswa.profil') }}" class="flex items-center gap-2 px-4 py-2.5 hover:bg-slate-50">
+          <i class="bi bi-person text-brand"></i> Profil
+        </a>
+      </li>
+      <li>
+        <form method="POST" action="{{ route('logout') }}">
+          @csrf
+          <button type="submit" class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-rose-600 hover:bg-rose-50">
+            <i class="bi bi-box-arrow-left"></i> Keluar
+          </button>
+        </form>
+      </li>
+    </ul>
   </div>
 </div>

@@ -11,7 +11,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'role' => \App\Http\Middleware\EnsureRole::class,
+        ]);
+
+        $middleware->redirectGuestsTo(fn () => route('login.form'));
+
+        $middleware->redirectUsersTo(function (\Illuminate\Http\Request $request) {
+            $user = $request->user();
+
+            return $user && $user->isAdmin()
+                ? route('admin.dashboard')
+                : route('mahasiswa.beranda');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -5,48 +5,56 @@
 @section('page_title', 'Kelola Buku')
 
 @section('content')
-<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Total Buku</p>
-    <p class="mt-2 text-2xl font-bold text-slate-800">30</p>
+<div class="mb-6 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+  <div class="flex items-center gap-2 border-b border-slate-200 bg-gradient-to-r from-[#1E376E]/8 to-teal-500/10 px-5 py-3.5">
+    <i class="bi bi-funnel text-[#1E376E]"></i>
+    <h2 class="font-semibold text-[#1E376E]">Filter Buku</h2>
   </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Total Anggota</p>
-    <p class="mt-2 text-2xl font-bold text-blue-700">2</p>
-  </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Buku Dipinjam</p>
-    <p class="mt-2 text-2xl font-bold text-emerald-600">1</p>
-  </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Transaksi Hari Ini</p>
-    <p class="mt-2 text-2xl font-bold text-rose-600">1</p>
-  </div>
-</div>
-
-<div class="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-  <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
-    <input id="searchInput" type="text" placeholder="Cari Judul, Pengarang, atau penerbit..."
-      class="md:col-span-7 w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none">
+  <div class="p-5">
+    <p class="mb-4 text-sm text-slate-500">Cari berdasarkan judul, pengarang, penerbit, atau kategori.</p>
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+    <div class="relative md:col-span-7">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+    <input id="searchInput" type="text" placeholder="Cari judul, pengarang, atau penerbit..."
+      class="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
+    </div>
+    <div class="relative md:col-span-3">
+      <i class="bi bi-tags absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
     <select id="categoryFilter"
-      class="md:col-span-3 w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none">
+      class="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
       <option value="all">Semua Kategori</option>
       <option value="Pendidikan">Pendidikan</option>
       <option value="Fiksi">Fiksi</option>
       <option value="Bisnis">Bisnis</option>
     </select>
-    <button onclick="openTambahModal()"
-      class="md:col-span-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition">
-      Tambah Buku
+    </div>
+    <button type="button" onclick="openTambahModal()"
+      class="md:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#1E376E] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#162d5c]">
+      <i class="bi bi-plus-lg"></i> Tambah Buku
     </button>
+    </div>
   </div>
 </div>
 
-<div id="bookContainer" class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"></div>
+<div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+  <div class="flex items-center justify-between gap-2 border-b border-slate-200 bg-gradient-to-r from-[#1E376E]/8 to-teal-500/10 px-5 py-3.5">
+    <div class="flex items-center gap-2">
+      <i class="bi bi-grid-3x3-gap text-[#1E376E]"></i>
+      <h3 class="font-semibold text-[#1E376E]">Koleksi Buku</h3>
+    </div>
+    <span id="bookCount" class="text-xs font-medium text-slate-500"></span>
+  </div>
+  <div class="p-5">
+    <div id="book-empty" class="hidden rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center text-sm text-slate-500">
+      <i class="bi bi-journal-x mb-2 block text-3xl text-slate-300"></i>
+      Tidak ada buku yang cocok dengan pencarian Anda.
+    </div>
+    <div id="bookContainer" class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"></div>
+    <div id="paginationContainer" class="mt-6 flex justify-center"></div>
+  </div>
+</div>
 
-<div id="paginationContainer" class="mt-6 flex justify-center"></div>
-
-<div id="detailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+<div id="detailModal" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-50 justify-center items-center w-full h-full p-4" tabindex="-1" aria-hidden="true">
   <div class="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
     <div class="mb-4 flex items-center justify-between border-b border-slate-200 pb-3">
       <h3 class="text-lg font-semibold">Detail Buku</h3>
@@ -95,17 +103,44 @@
           <p class="text-slate-500">ISBN</p>
           <p class="col-span-2 font-medium" id="detailIsbn">-</p>
         </div>
+        <div class="grid grid-cols-3 gap-2">
+          <p class="text-slate-500">Deskripsi</p>
+          <p class="col-span-2 text-slate-700" id="detailDescription">-</p>
+        </div>
       </div>
     </div>
 
     <div class="mt-6 flex justify-end gap-2">
-      <button onclick="closeDetailModal()" class="rounded-lg bg-slate-500 px-4 py-2 text-sm text-white hover:bg-slate-600">Kembali</button>
-      <button onclick="openEditModal()" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm text-white hover:bg-emerald-600">Edit</button>
+      <button type="button" onclick="openHapusBukuModal()" class="rounded-lg bg-rose-500 px-4 py-2 text-sm text-white hover:bg-rose-600">
+        <i class="bi bi-trash"></i> Hapus
+      </button>
+      <button type="button" onclick="openEditModal()" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm text-white hover:bg-emerald-600">Edit</button>
     </div>
   </div>
 </div>
 
-<div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+<div id="hapusBukuModal" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-[60] justify-center items-center w-full h-full p-4" tabindex="-1" aria-hidden="true">
+  <div class="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+    <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+      <i class="bi bi-exclamation-triangle text-2xl"></i>
+    </div>
+    <h3 class="text-center text-base font-semibold text-slate-800">Hapus Buku?</h3>
+    <p class="mt-1 text-center text-xs text-slate-500">Buku <span id="hapusBukuTitle" class="font-semibold text-slate-700"></span> akan dihapus permanen.</p>
+
+    <div class="mt-5 flex justify-center gap-2">
+      <button type="button" onclick="closeHapusBukuModal()"
+        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
+        Batal
+      </button>
+      <button type="button" onclick="confirmDeleteBuku()"
+        class="rounded-lg bg-rose-500 px-4 py-2 text-xs font-medium text-white hover:bg-rose-600">
+        Hapus
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="editModal" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-50 justify-center items-center w-full h-full p-4" tabindex="-1" aria-hidden="true">
   <div class="w-full max-w-5xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
     <div class="mb-4 flex items-center justify-between border-b border-slate-200 pb-3">
       <h3 class="text-lg font-semibold">Edit Buku</h3>
@@ -117,7 +152,7 @@
     <div class="grid gap-x-6 gap-y-3 md:grid-cols-2">
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Kode Buku<span class="text-rose-500">*</span></label>
-        <input id="editCode" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <input id="editCode" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase">
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">ISBN<span class="text-rose-500">*</span></label>
@@ -141,13 +176,7 @@
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Tahun Terbit</label>
-        <select id="editYear" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-          <option>2018</option>
-          <option>2019</option>
-          <option>2020</option>
-          <option>2021</option>
-          <option>2022</option>
-        </select>
+        <select id="editYear" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></select>
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Kategori</label>
@@ -164,21 +193,27 @@
 
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Cover Buku</label>
-        <label class="flex h-[90px] w-[110px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400 hover:bg-slate-100 transition">
-          <img id="editPreviewImg" src="" alt="Preview Cover" class="h-full w-full rounded-lg object-cover">
-          <input type="file" class="hidden" accept="image/*">
+        <label class="flex h-[120px] w-[100px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400 hover:bg-slate-100 transition">
+          <img id="editPreviewImg" src="" alt="Preview Cover" class="hidden h-full w-full object-cover">
+          <span id="editCoverPlaceholder" class="text-center text-[10px] leading-tight"><span class="text-2xl block">🖼️</span>Upload Cover</span>
+          <input id="editCover" type="file" class="hidden" accept="image/*">
         </label>
+      </div>
+      <div class="md:col-span-2">
+        <label class="mb-1 block text-xs font-semibold text-slate-600">Deskripsi</label>
+        <textarea id="editDescription" rows="3" placeholder="Ringkasan atau sinopsis buku..."
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
       </div>
     </div>
 
     <div class="mt-6 flex justify-end gap-2">
       <button onclick="closeEditModal()" class="rounded-lg bg-slate-500 px-4 py-2 text-sm text-white hover:bg-slate-600">Kembali</button>
-      <button class="rounded-lg bg-violet-500 px-4 py-2 text-sm text-white hover:bg-violet-600">Simpan</button>
+      <button type="button" onclick="saveEditBook()" class="rounded-lg bg-violet-500 px-4 py-2 text-sm text-white hover:bg-violet-600">Simpan</button>
     </div>
   </div>
 </div>
 
-<div id="tambahModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+<div id="tambahModal" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-50 justify-center items-center w-full h-full p-4" tabindex="-1" aria-hidden="true">
   <div class="w-full max-w-5xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
     <div class="mb-4 flex items-center justify-between border-b border-slate-200 pb-3">
       <h3 class="text-lg font-semibold">Tambah Buku</h3>
@@ -190,62 +225,62 @@
     <div class="grid gap-x-6 gap-y-3 md:grid-cols-2">
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Kode Buku<span class="text-rose-500">*</span></label>
-        <input type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value="">
+        <input id="tambahCode" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase">
       </div>
       <div>
-        <label class="mb-1 block text-xs font-semibold text-slate-600">ISBN<span class="text-rose-500">*</span></label>
-        <input type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value="">
+        <label class="mb-1 block text-xs font-semibold text-slate-600">ISBN</label>
+        <input id="tambahIsbn" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Judul Buku<span class="text-rose-500">*</span></label>
-        <input type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value="">
+        <input id="tambahTitle" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Penerbit<span class="text-rose-500">*</span></label>
-        <input type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value="">
+        <input id="tambahPublisher" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Pengarang<span class="text-rose-500">*</span></label>
-        <input type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value="">
+        <input id="tambahAuthor" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Lokasi Rak</label>
-        <input type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value="">
+        <input id="tambahRack" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
       </div>
       <div>
-        <label class="mb-1 block text-xs font-semibold text-slate-600">Tahun Terbit</label>
-        <select class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-          <option>2018</option>
-          <option>2019</option>
-          <option>2020</option>
-        </select>
+        <label class="mb-1 block text-xs font-semibold text-slate-600">Tahun Terbit<span class="text-rose-500">*</span></label>
+        <select id="tambahYear" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></select>
       </div>
       <div>
-        <label class="mb-1 block text-xs font-semibold text-slate-600">Kategori</label>
-        <select class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-          <option>Pendidikan</option>
-          <option>Fiksi</option>
-          <option>Bisnis</option>
+        <label class="mb-1 block text-xs font-semibold text-slate-600">Kategori<span class="text-rose-500">*</span></label>
+        <select id="tambahCategory" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <option value="Pendidikan">Pendidikan</option>
+          <option value="Fiksi">Fiksi</option>
+          <option value="Bisnis">Bisnis</option>
         </select>
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Jumlah Buku<span class="text-rose-500">*</span></label>
-        <input type="number" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value="">
+        <input id="tambahStock" type="number" min="0" value="0" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
       </div>
-
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Upload Cover Buku</label>
-        <label class="flex h-[90px] w-[110px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400 hover:bg-slate-100 transition">
-          <span class="text-2xl">🖼️</span>
-          <span class="mt-1 text-[10px]">Upload Cover</span>
-          <input type="file" class="hidden" accept="image/*">
+        <label class="flex h-[120px] w-[100px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400 hover:bg-slate-100 transition">
+          <img id="tambahPreviewImg" src="" alt="Preview Cover" class="hidden h-full w-full object-cover">
+          <span id="tambahCoverPlaceholder" class="text-center text-[10px] leading-tight"><span class="text-2xl block">🖼️</span>Upload Cover</span>
+          <input id="tambahCover" type="file" class="hidden" accept="image/*">
         </label>
+      </div>
+      <div class="md:col-span-2">
+        <label class="mb-1 block text-xs font-semibold text-slate-600">Deskripsi</label>
+        <textarea id="tambahDescription" rows="3" placeholder="Ringkasan atau sinopsis buku..."
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
       </div>
     </div>
 
     <div class="mt-6 flex justify-end gap-2">
       <button onclick="closeTambahModal()" class="rounded-lg bg-slate-500 px-4 py-2 text-sm text-white hover:bg-slate-600">Kembali</button>
-      <button class="rounded-lg bg-violet-500 px-4 py-2 text-sm text-white hover:bg-violet-600">Simpan</button>
+      <button type="button" onclick="saveTambahBook()" class="rounded-lg bg-violet-500 px-4 py-2 text-sm text-white hover:bg-violet-600">Simpan</button>
     </div>
   </div>
 </div>
@@ -253,51 +288,230 @@
 
 @push('scripts')
 <script>
-const books = [
-  { code: "BPKSJ124", title: "Atomic Habits", author: "James Clear", category: "Pendidikan", publisher: "Avery Publishing", year: "2018", stock: 30, rack: "A5-01", isbn: "978-602-06-3317-6", img: "https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg" },
-  { code: "BPKSJ125", title: "Tentang Kamu", author: "Tere Liye", category: "Fiksi", publisher: "Republika", year: "2016", stock: 29, rack: "A5-02", isbn: "978-602-04-3317-7", img: "https://m.media-amazon.com/images/I/81af+MCATTL.jpg" },
-  { code: "BPKSJ126", title: "Rich Dad Poor Dad", author: "Robert Kiyosaki", category: "Bisnis", publisher: "Plata", year: "2017", stock: 30, rack: "A5-03", isbn: "978-1612680194", img: "https://m.media-amazon.com/images/I/71UwSHSZRnS.jpg" },
-  { code: "BPKSJ127", title: "Filosofi Teras", author: "Henry Manampiring", category: "Pendidikan", publisher: "Kompas", year: "2019", stock: 30, rack: "A5-04", isbn: "978-6024125189", img: "https://m.media-amazon.com/images/I/81zD9kaVW9L.jpg" },
-  { code: "BPKSJ128", title: "Psikologi Uang", author: "Morgan Housel", category: "Bisnis", publisher: "Harriman", year: "2021", stock: 30, rack: "A5-05", isbn: "978-0857197689", img: "https://m.media-amazon.com/images/I/71g2ednj0JL.jpg" },
-  { code: "BPKSJ129", title: "Bumi", author: "Tere Liye", category: "Fiksi", publisher: "Gramedia", year: "2014", stock: 30, rack: "A5-06", isbn: "978-6020324784", img: "https://m.media-amazon.com/images/I/81l3rZK4lnL.jpg" },
-  { code: "BPKSJ130", title: "Laut Bercerita", author: "Leila S Chudori", category: "Fiksi", publisher: "Kepustakaan Populer", year: "2017", stock: 20, rack: "A5-07", isbn: "978-6024246945", img: "https://m.media-amazon.com/images/I/81af+MCATTL.jpg" },
-  { code: "BPKSJ131", title: "Sapiens", author: "Yuval Noah Harari", category: "Pendidikan", publisher: "Harper", year: "2015", stock: 15, rack: "A5-08", isbn: "978-0062316097", img: "https://m.media-amazon.com/images/I/713jIoMO3UL.jpg" },
-  { code: "BPKSJ132", title: "The Psychology of Money", author: "Morgan Housel", category: "Bisnis", publisher: "Harriman House", year: "2020", stock: 17, rack: "A5-09", isbn: "978-0857197689", img: "https://m.media-amazon.com/images/I/71g2ednj0JL.jpg" },
-  { code: "BPKSJ133", title: "Bicara Itu Ada Seninya", author: "Oh Su Hyang", category: "Pendidikan", publisher: "Bhuana Ilmu Populer", year: "2018", stock: 22, rack: "A5-10", isbn: "978-6024553920", img: "https://m.media-amazon.com/images/I/71f6DceqZSL.jpg" },
-  { code: "BPKSJ134", title: "Negeri 5 Menara", author: "Ahmad Fuadi", category: "Fiksi", publisher: "Gramedia", year: "2010", stock: 12, rack: "A5-11", isbn: "978-9792248616", img: "https://m.media-amazon.com/images/I/81o9Qd7StXL.jpg" }
-];
+let books = [];
+const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+const defaultCover = "{{ asset('images/' . rawurlencode('Cover buku 1.jpg')) }}";
 
 const bookContainer = document.getElementById("bookContainer");
 const paginationContainer = document.getElementById("paginationContainer");
+const bookCountEl = document.getElementById("bookCount");
+const bookEmptyEl = document.getElementById("book-empty");
 const searchInput = document.getElementById("searchInput");
 const categoryFilter = document.getElementById("categoryFilter");
+
+function escHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+function fillYearSelect(selectEl, selected) {
+  if (!selectEl) return;
+  const now = new Date().getFullYear();
+  let html = "";
+  for (let y = now; y >= 1990; y--) {
+    html += `<option value="${y}"${String(selected) === String(y) ? " selected" : ""}>${y}</option>`;
+  }
+  selectEl.innerHTML = html;
+}
+
+function updateCategoryFilter(categories) {
+  const current = categoryFilter.value;
+  let html = `<option value="all">Semua Kategori</option>`;
+  const defaults = ["Pendidikan", "Fiksi", "Bisnis"];
+  const merged = [...new Set([...defaults, ...(categories || [])])];
+  merged.forEach((cat) => {
+    html += `<option value="${escHtml(cat)}">${escHtml(cat)}</option>`;
+  });
+  categoryFilter.innerHTML = html;
+  if ([...categoryFilter.options].some((o) => o.value === current)) {
+    categoryFilter.value = current;
+  }
+}
+
 let selectedBook = null;
-let filteredBooks = [...books];
+let filteredBooks = [];
 let currentPage = 1;
 const booksPerPage = 6;
 
+async function fetchBooks() {
+  const res = await fetch("{{ route('admin.buku.list') }}", { headers: { Accept: "application/json" } });
+  const json = await res.json();
+  books = json.data || [];
+  filteredBooks = [...books];
+  updateCategoryFilter(json.categories || []);
+  currentPage = 1;
+  renderBooks(filteredBooks);
+}
+
+function previewCoverInput(input, imgEl, placeholderEl) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    imgEl.src = e.target.result;
+    imgEl.classList.remove("hidden");
+    if (placeholderEl) placeholderEl.classList.add("hidden");
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetCoverPreview(imgEl, placeholderEl, inputEl) {
+  if (inputEl) inputEl.value = "";
+  if (imgEl) {
+    imgEl.src = "";
+    imgEl.classList.add("hidden");
+  }
+  if (placeholderEl) placeholderEl.classList.remove("hidden");
+}
+
+function showCoverPreview(imgEl, placeholderEl, url) {
+  if (!imgEl) return;
+  imgEl.src = url || defaultCover;
+  imgEl.classList.remove("hidden");
+  if (placeholderEl) placeholderEl.classList.add("hidden");
+}
+
+function appendBookFields(formData, payload) {
+  Object.entries(payload).forEach(([key, value]) => formData.append(key, value ?? ""));
+}
+
+function showValidationErrors(json) {
+  const errors = json?.errors;
+  if (!errors) {
+    alert(json?.message || "Gagal menyimpan data.");
+    return;
+  }
+  const lines = [];
+  Object.values(errors).forEach((msgs) => {
+    (Array.isArray(msgs) ? msgs : [msgs]).forEach((m) => lines.push(m));
+  });
+  alert(lines.length ? lines.join("\n") : (json.message || "Validasi gagal"));
+}
+
+function bookPayloadFromEdit() {
+  return {
+    code: document.getElementById("editCode").value.trim(),
+    title: document.getElementById("editTitle").value.trim(),
+    author: document.getElementById("editAuthor").value.trim(),
+    publisher: document.getElementById("editPublisher").value.trim(),
+    category: document.getElementById("editCategory").value,
+    year: document.getElementById("editYear").value,
+    stock: document.getElementById("editStock").value,
+    isbn: document.getElementById("editIsbn").value.trim(),
+    rack: document.getElementById("editRack").value.trim(),
+    description: document.getElementById("editDescription").value.trim(),
+  };
+}
+
+function bookPayloadFromTambah() {
+  return {
+    code: document.getElementById("tambahCode").value.trim(),
+    title: document.getElementById("tambahTitle").value.trim(),
+    author: document.getElementById("tambahAuthor").value.trim(),
+    publisher: document.getElementById("tambahPublisher").value.trim(),
+    category: document.getElementById("tambahCategory").value,
+    year: document.getElementById("tambahYear").value,
+    stock: document.getElementById("tambahStock").value,
+    isbn: document.getElementById("tambahIsbn").value.trim(),
+    rack: document.getElementById("tambahRack").value.trim(),
+    description: document.getElementById("tambahDescription").value.trim(),
+  };
+}
+
+async function saveEditBook() {
+  if (!selectedBook) return;
+  const payload = bookPayloadFromEdit();
+  if (!payload.code || !payload.title || !payload.author || !payload.publisher) {
+    alert("Kode buku, judul, pengarang, dan penerbit wajib diisi.");
+    return;
+  }
+
+  const formData = new FormData();
+  appendBookFields(formData, payload);
+  formData.append("_method", "PUT");
+  const coverFile = document.getElementById("editCover")?.files?.[0];
+  if (coverFile) formData.append("cover", coverFile);
+
+  const res = await fetch(`{{ route('admin.buku.list') }}/${encodeURIComponent(selectedBook.id)}`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "X-CSRF-TOKEN": csrf,
+    },
+    body: formData,
+  });
+
+  const json = await res.json();
+  if (!res.ok) {
+    showValidationErrors(json);
+    return;
+  }
+
+  closeEditModal();
+  await fetchBooks();
+  alert(json.message || "Buku berhasil diperbarui.");
+}
+
+async function saveTambahBook() {
+  const payload = bookPayloadFromTambah();
+  if (!payload.code || !payload.title || !payload.author || !payload.publisher) {
+    alert("Kode buku, judul, pengarang, dan penerbit wajib diisi.");
+    return;
+  }
+  if (payload.stock === "" || Number(payload.stock) < 0) {
+    alert("Jumlah buku wajib diisi (minimal 0).");
+    return;
+  }
+  if (!payload.year) {
+    alert("Tahun terbit wajib dipilih.");
+    return;
+  }
+
+  const formData = new FormData();
+  appendBookFields(formData, payload);
+  const coverFile = document.getElementById("tambahCover")?.files?.[0];
+  if (coverFile) formData.append("cover", coverFile);
+
+  const res = await fetch("{{ route('admin.buku.store') }}", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "X-CSRF-TOKEN": csrf,
+    },
+    body: formData,
+  });
+
+  const json = await res.json();
+  if (!res.ok) {
+    alert(json.message || "Gagal menambah buku.");
+    return;
+  }
+
+  closeTambahModal();
+  await fetchBooks();
+  alert(json.message || "Buku berhasil ditambahkan.");
+}
+
 function renderBooks(data) {
   bookContainer.innerHTML = "";
+  if (bookEmptyEl) bookEmptyEl.classList.toggle("hidden", data.length > 0);
+  if (bookCountEl) bookCountEl.textContent = data.length ? `${data.length} buku` : "";
   const start = (currentPage - 1) * booksPerPage;
   const paginatedBooks = data.slice(start, start + booksPerPage);
 
   paginatedBooks.forEach((book) => {
     bookContainer.innerHTML += `
-      <div class="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm">
-        <img src="${book.img}" class="mx-auto h-40 rounded-lg object-cover">
-        <h4 class="mt-2 font-semibold text-slate-800">${book.title}</h4>
-        <p class="text-xs text-slate-500">${book.author}</p>
-        <p class="text-xs text-slate-500">${book.category}</p>
-        <p class="text-xs text-slate-500">Tersedia : ${book.stock}</p>
-        <button onclick='openDetailModal(${JSON.stringify(book)})'
-          class="mt-2 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          <span>Lihat Detail</span>
-        </button>
-      </div>
+      <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+        <img src="${escHtml(book.img)}" alt="${escHtml(book.title)}" onerror="this.onerror=null;this.src=defaultCover;" class="h-44 w-full object-cover">
+        <div class="p-3">
+          <h6 class="line-clamp-2 font-bold text-[#1E376E]" title="${escHtml(book.title)}">${escHtml(book.title)}</h6>
+          <p class="mt-1 text-sm text-slate-500">${escHtml(book.author)}</p>
+          <p class="text-sm text-slate-500">${escHtml(book.category)}</p>
+          <p class="text-sm text-slate-500">Tersedia : ${book.stock}</p>
+          <button type="button" data-id="${escHtml(book.id)}" class="js-detail-book mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#1E376E] py-2 text-sm font-semibold text-white transition hover:bg-[#162d5c]">
+            <i class="bi bi-eye"></i> Lihat Detail
+          </button>
+        </div>
+      </article>
     `;
   });
 
@@ -311,18 +525,18 @@ function renderPagination(totalItems) {
   if (totalPages <= 1) return;
 
   let html = `<div class="inline-flex overflow-hidden rounded-lg border border-slate-200">`;
-  html += `<button onclick="changePage(${Math.max(1, currentPage - 1)})" class="border-r border-slate-200 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50">&lt;</button>`;
+  html += `<button type="button" onclick="changePage(${Math.max(1, currentPage - 1)})" class="border-r border-slate-200 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50">&lt;</button>`;
 
   for (let i = 1; i <= totalPages; i++) {
     html += `
-      <button onclick="changePage(${i})"
-        class="border-r border-slate-200 px-4 py-1.5 text-xs ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}">
+      <button type="button" onclick="changePage(${i})"
+        class="border-r border-slate-200 px-4 py-1.5 text-xs ${i === currentPage ? 'bg-[#1E376E] text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}">
         ${i}
       </button>
     `;
   }
 
-  html += `<button onclick="changePage(${Math.min(totalPages, currentPage + 1)})" class="bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50">&gt;</button>`;
+  html += `<button type="button" onclick="changePage(${Math.min(totalPages, currentPage + 1)})" class="bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50">&gt;</button>`;
   html += `</div>`;
   paginationContainer.innerHTML = html;
 }
@@ -359,62 +573,124 @@ function openDetailModal(book) {
   document.getElementById("detailPublisher").textContent = book.publisher;
   document.getElementById("detailYear").textContent = book.year;
   document.getElementById("detailCategory").textContent = book.category;
-  document.getElementById("detailStock").textContent = `${book.stock} dari 30 tersedia`;
+  document.getElementById("detailStock").textContent = `${book.stock} tersedia`;
   document.getElementById("detailRack").textContent = book.rack;
   document.getElementById("detailIsbn").textContent = book.isbn;
+  document.getElementById("detailDescription").textContent =
+    book.description && book.description !== "-" ? book.description : "-";
   document.getElementById("detailImg").src = book.img;
 
-  const modal = document.getElementById("detailModal");
-  modal.classList.remove("hidden");
-  modal.classList.add("flex");
+  fbShow('detailModal');
 }
 
 function closeDetailModal() {
-  const modal = document.getElementById("detailModal");
-  modal.classList.add("hidden");
-  modal.classList.remove("flex");
+  fbHide('detailModal');
+}
+
+function openHapusBukuModal() {
+  if (!selectedBook) return;
+  document.getElementById("hapusBukuTitle").textContent = selectedBook.title;
+  fbShow('hapusBukuModal');
+}
+
+function closeHapusBukuModal() {
+  fbHide('hapusBukuModal');
+}
+
+async function confirmDeleteBuku() {
+  if (!selectedBook) return;
+
+  const res = await fetch(`{{ route('admin.buku.list') }}/${encodeURIComponent(selectedBook.id)}`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      "X-CSRF-TOKEN": csrf,
+    },
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    alert(json.message || "Gagal menghapus buku.");
+    return;
+  }
+
+  closeHapusBukuModal();
+  closeDetailModal();
+  selectedBook = null;
+  await fetchBooks();
+  alert(json.message || "Buku berhasil dihapus.");
 }
 
 function openEditModal() {
   if (!selectedBook) return;
 
-  document.getElementById("editCode").value = selectedBook.code;
-  document.getElementById("editIsbn").value = selectedBook.isbn;
+  document.getElementById("editCode").value = selectedBook.code || "";
+  document.getElementById("editIsbn").value = selectedBook.isbn === "-" ? "" : selectedBook.isbn;
   document.getElementById("editTitle").value = selectedBook.title;
   document.getElementById("editPublisher").value = selectedBook.publisher;
   document.getElementById("editAuthor").value = selectedBook.author;
-  document.getElementById("editRack").value = selectedBook.rack;
-  document.getElementById("editYear").value = selectedBook.year;
+  document.getElementById("editRack").value = selectedBook.rack === "-" ? "" : selectedBook.rack;
+  fillYearSelect(document.getElementById("editYear"), selectedBook.year);
   document.getElementById("editCategory").value = selectedBook.category;
   document.getElementById("editStock").value = selectedBook.stock;
-  document.getElementById("editPreviewImg").src = selectedBook.img;
+  document.getElementById("editDescription").value =
+    selectedBook.description && selectedBook.description !== "-" ? selectedBook.description : "";
+  showCoverPreview(
+    document.getElementById("editPreviewImg"),
+    document.getElementById("editCoverPlaceholder"),
+    selectedBook.img
+  );
+  document.getElementById("editCover").value = "";
 
   closeDetailModal();
-  const modal = document.getElementById("editModal");
-  modal.classList.remove("hidden");
-  modal.classList.add("flex");
+  fbShow('editModal');
 }
 
 function closeEditModal() {
-  const modal = document.getElementById("editModal");
-  modal.classList.add("hidden");
-  modal.classList.remove("flex");
+  fbHide('editModal');
 }
 
 function openTambahModal() {
-  const modal = document.getElementById("tambahModal");
-  modal.classList.remove("hidden");
-  modal.classList.add("flex");
+  document.getElementById("tambahCode").value = "";
+  document.getElementById("tambahTitle").value = "";
+  document.getElementById("tambahIsbn").value = "";
+  document.getElementById("tambahPublisher").value = "";
+  document.getElementById("tambahAuthor").value = "";
+  document.getElementById("tambahRack").value = "";
+  document.getElementById("tambahStock").value = "0";
+  document.getElementById("tambahDescription").value = "";
+  resetCoverPreview(
+    document.getElementById("tambahPreviewImg"),
+    document.getElementById("tambahCoverPlaceholder"),
+    document.getElementById("tambahCover")
+  );
+  fillYearSelect(document.getElementById("tambahYear"), new Date().getFullYear());
+  document.getElementById("tambahCategory").value = "Pendidikan";
+  fbShow('tambahModal');
 }
 
 function closeTambahModal() {
-  const modal = document.getElementById("tambahModal");
-  modal.classList.add("hidden");
-  modal.classList.remove("flex");
+  fbHide('tambahModal');
 }
+
+bookContainer.addEventListener("click", (e) => {
+  const btn = e.target.closest(".js-detail-book");
+  if (!btn) return;
+  const id = btn.getAttribute("data-id");
+  const book = books.find((b) => String(b.id) === String(id));
+  if (book) openDetailModal(book);
+});
 
 searchInput.addEventListener("keyup", filterBooks);
 categoryFilter.addEventListener("change", filterBooks);
-renderBooks(filteredBooks);
+document.getElementById("tambahCover")?.addEventListener("change", (e) => {
+  previewCoverInput(e.target, document.getElementById("tambahPreviewImg"), document.getElementById("tambahCoverPlaceholder"));
+});
+document.getElementById("editCover")?.addEventListener("change", (e) => {
+  previewCoverInput(e.target, document.getElementById("editPreviewImg"), document.getElementById("editCoverPlaceholder"));
+});
+fillYearSelect(document.getElementById("editYear"), new Date().getFullYear());
+fillYearSelect(document.getElementById("tambahYear"), new Date().getFullYear());
+fetchBooks();
 </script>
 @endpush

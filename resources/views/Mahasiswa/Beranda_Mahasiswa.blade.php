@@ -3,63 +3,41 @@
 @section('title', 'Dashboard')
 @section('active_page', 'beranda')
 @section('page_title', 'Beranda')
-@section('page_subtitle', 'Pantau aktivitas peminjaman buku Anda di sini.')
+@section('page_subtitle', 'Jelajahi rekomendasi buku dan koleksi perpustakaan digital kampus.')
 
 @section('content')
 <!-- WELCOME -->
-<div class="mb-6 rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-600 p-6 text-white shadow-lg">
-  <h2 class="mb-1 text-xl font-semibold">Selamat Datang, Luthfi Dwi Apriyadi</h2>
-  <p class="text-sm text-blue-100">Senin, 29 Maret 2026</p>
-</div>
-
-<!-- INFO -->
-<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Total Peminjaman</p>
-    <p class="mt-2 text-2xl font-bold text-slate-800">1</p>
-  </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Sedang Dipinjam</p>
-    <p class="mt-2 text-2xl font-bold text-blue-700">1</p>
-  </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Sudah Dikembalikan</p>
-    <p class="mt-2 text-2xl font-bold text-emerald-600">1</p>
-  </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p class="text-sm text-slate-500">Terlambat</p>
-    <p class="mt-2 text-2xl font-bold text-rose-600">1</p>
-  </div>
-</div>
-
-<!-- DIPINJAM -->
-<div class="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-  <div class="border-b border-slate-100 p-4 font-semibold">Buku Yang Sedang Dipinjam</div>
-  <div class="flex items-center p-4">
-    <img src="https://m.media-amazon.com/images/I/81af+MCATTL.jpg" class="w-24 rounded-lg object-cover shadow-sm" alt="Sampul Tentang Kamu">
-    <div class="ml-4">
-      <h3 class="font-semibold text-slate-800">Tentang Kamu</h3>
-      <p class="text-sm text-slate-500">Tere Liye</p>
-      <p class="text-sm text-slate-500">Pinjam: 23 Maret 2026</p>
-      <p class="text-sm text-slate-500">Kembali: 30 Maret 2026</p>
-      <span class="mt-2 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
-        Sedang Dipinjam
-      </span>
-    </div>
-  </div>
+<div class="mb-6 rounded-2xl bg-gradient-to-br from-brand via-brand-light to-teal-600 p-6 text-white shadow-lg">
+  @php
+    $userName = auth()->user()->name ?? 'Pengguna';
+    $todayId = now()->locale('id')->translatedFormat('l, d F Y');
+  @endphp
+  <h2 class="mb-1 text-xl font-semibold">Selamat Datang, {{ $userName }}</h2>
+  <p class="text-sm text-blue-100">{{ $todayId }}</p>
 </div>
 
 <!-- REKOMENDASI -->
-<div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-  <div class="border-b border-slate-100 p-4 font-semibold">Rekomendasi Buku Untuk Anda</div>
+<div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+  <div class="flex items-center justify-between gap-2 border-b border-slate-200 bg-gradient-to-r from-[#1E376E]/8 to-teal-500/10 px-5 py-3.5">
+    <div class="flex items-center gap-2">
+      <i class="bi bi-stars text-[#1E376E]"></i>
+      <h3 class="font-semibold text-[#1E376E]">Rekomendasi Buku Untuk Anda</h3>
+    </div>
+    <a href="{{ url('Katalog_Buku') }}" class="text-xs font-medium text-[#1E376E] hover:underline">
+      Lihat semua <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
 
-  <div class="grid grid-cols-2 gap-3 p-4 md:grid-cols-3 xl:grid-cols-6" id="rekomendasi-container"></div>
+  <div id="rekomendasi-empty" class="hidden px-5 pb-5 text-center text-sm text-slate-500">
+    Belum ada buku di koleksi perpustakaan.
+  </div>
+  <div class="grid grid-cols-2 gap-4 p-5 md:grid-cols-3 xl:grid-cols-4" id="rekomendasi-container"></div>
 </div>
 
 <!-- MODAL DETAIL BUKU -->
-<div id="bookDetailModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 p-4" aria-hidden="true">
+<div id="bookDetailModal" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-50 justify-center items-center w-full h-full p-4" tabindex="-1" aria-hidden="true">
   <div class="relative max-h-[95vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-    <button type="button" onclick="closeBookDetail()" class="absolute right-4 top-4 text-2xl leading-none text-slate-500 hover:text-slate-800" aria-label="Tutup">&times;</button>
+    <button type="button" data-modal-hide="bookDetailModal" onclick="closeBookDetail()" class="absolute right-4 top-4 text-2xl leading-none text-slate-500 hover:text-slate-800" aria-label="Tutup">&times;</button>
     <h2 class="mb-4 border-b border-slate-200 pb-3 pr-10 text-xl font-bold text-slate-900">Detail Buku</h2>
 
     <div class="grid gap-6 md:grid-cols-2">
@@ -101,24 +79,16 @@
 
 @push('scripts')
 <script>
-const books = [
-  { id: 'ah', title: 'Atomic Habits', author: 'James Clear', publisher: 'Avery Publishing', year: '2018', yearLabel: '16 Oktober 2018', category: 'Pendidikan', code: 'BPKSJ124', rack: 'A5-01', isbn: '978-0735211292', available: true, stockLabel: '12 tersedia', img: 'https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg', description: 'Panduan membangun kebiasaan baik kecil yang membawa perubahan besar dalam hidup.' },
-  { id: 'rd', title: 'Rich Dad Poor Dad', author: 'Robert T. Kiyosaki', publisher: 'Plata Publishing', year: '2017', yearLabel: '11 April 2017', category: 'Bisnis', code: 'BPKSJ125', rack: 'A5-03', isbn: '978-1612680194', available: true, stockLabel: '8 tersedia', img: 'https://m.media-amazon.com/images/I/71UwSHSZRnS.jpg', description: 'Pemikiran tentang literasi keuangan dan investasi dari sudut pandang dua figur ayah.' },
-  { id: 'ft', title: 'Filosofi Teras', author: 'Henry Manampiring', publisher: 'Kompas Gramedia', year: '2018', yearLabel: '3 Maret 2018', category: 'Pendidikan', code: 'BPKSJ126', rack: 'A5-04', isbn: '978-6024125189', available: false, stockLabel: 'Dipinjam semua', img: 'https://m.media-amazon.com/images/I/81zD9kaVW9L.jpg', description: 'Pengenalan filosofi Stoa untuk menghadapi hidup modern dengan lebih tenang.' },
-  { id: 'pu', title: 'Psikologi Uang', author: 'Morgan Housel', publisher: 'Harriman House', year: '2020', yearLabel: '8 September 2020', category: 'Bisnis', code: 'BPKSJ127', rack: 'A5-05', isbn: '978-0857197689', available: true, stockLabel: '5 tersedia', img: 'https://m.media-amazon.com/images/I/71g2ednj0JL.jpg', description: 'Cerita pendek tentang bagaimana manusia berpikir tentang uang dan kekayaan.' },
-  { id: 'lb', title: 'Laut Bercerita', author: 'Leila S. Chudori', publisher: 'Kepustakaan Populer Gramedia', year: '2017', yearLabel: '20 Januari 2017', category: 'Fiksi', code: 'BPKSJ128', rack: 'A5-06', isbn: '978-6024246945', available: true, stockLabel: '6 tersedia', img: 'https://m.media-amazon.com/images/I/81af+MCATTL.jpg', description: 'Novel sejarah Indonesia pasca-1965 yang mengisahkan persahabatan dan pengasingan.' },
-  { id: 'bm', title: 'Bumi', author: 'Tere Liye', publisher: 'Gramedia Pustaka Utama', year: '2014', yearLabel: '28 Januari 2014', category: 'Fiksi', code: 'BPKSJ129', rack: 'A5-07', isbn: '978-6020324784', available: false, stockLabel: 'Dipinjam semua', img: 'https://m.media-amazon.com/images/I/81l3rZK4lnL.jpg', description: 'Seri petualangan dunia paralel yang memadukan fiksi ilmiah dan persahabatan.' },
-];
-
-function shuffle(array) {
-  return [...array].sort(() => 0.5 - Math.random());
-}
-
-let rekomendasi = [...books.filter((b) => b.available), ...books.filter((b) => !b.available)];
-rekomendasi = shuffle(rekomendasi).slice(0, 6);
+let books = [];
+const defaultCover = "{{ asset('images/' . rawurlencode('Cover buku 1.jpg')) }}";
 
 const container = document.getElementById('rekomendasi-container');
+const emptyEl = document.getElementById('rekomendasi-empty');
 const modal = document.getElementById('bookDetailModal');
+
+function escAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
 
 function fillBookDetail(book) {
   document.getElementById('bookDetailImg').src = book.img;
@@ -127,7 +97,7 @@ function fillBookDetail(book) {
   document.getElementById('bookDetailCode').textContent = book.code;
   document.getElementById('bookDetailAuthor').textContent = book.author;
   document.getElementById('bookDetailPublisher').textContent = book.publisher;
-  document.getElementById('bookDetailYear').textContent = book.yearLabel || book.year;
+  document.getElementById('bookDetailYear').textContent = book.year;
   document.getElementById('bookDetailCategory').textContent = book.category;
   document.getElementById('bookDetailRack').textContent = book.rack;
   document.getElementById('bookDetailIsbn').textContent = book.isbn;
@@ -135,42 +105,60 @@ function fillBookDetail(book) {
 
   const stockEl = document.getElementById('bookDetailStock');
   const stockBg = book.available ? 'bg-emerald-500' : 'bg-rose-500';
-  stockEl.textContent = book.stockLabel || (book.available ? 'Tersedia' : 'Tidak tersedia');
+  stockEl.textContent = book.stockLabel;
   stockEl.className = 'ml-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium text-white ' + stockBg;
 }
 
 function openBookDetail(bookId) {
-  const book = books.find((b) => b.id === bookId);
+  const book = books.find((b) => String(b.id) === String(bookId));
   if (!book) return;
   fillBookDetail(book);
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('overflow-hidden');
+  fbShow('bookDetailModal');
 }
 
 function closeBookDetail() {
-  modal.classList.add('hidden');
-  modal.classList.remove('flex');
-  modal.setAttribute('aria-hidden', 'true');
-  document.body.classList.remove('overflow-hidden');
+  fbHide('bookDetailModal');
 }
 
 window.openBookDetail = openBookDetail;
 window.closeBookDetail = closeBookDetail;
 
-rekomendasi.forEach((book) => {
-  const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-  container.innerHTML += `
-    <div class="rounded-xl border border-slate-200 bg-white p-2 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-      <img src="${book.img}" alt="${escAttr(book.title)}" class="h-32 w-full rounded-lg object-cover">
-      <small class="mt-2 block truncate font-medium text-slate-700" title="${escAttr(book.title)}">${escAttr(book.title)}</small>
-      <button type="button" data-book-id="${escAttr(book.id)}" class="js-rekomendasi-detail mt-2 w-full rounded-lg bg-blue-600 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition">
-        Detail
-      </button>
-    </div>
-  `;
-});
+function renderRekomendasi(list) {
+  container.innerHTML = '';
+  if (emptyEl) emptyEl.classList.toggle('hidden', list.length > 0);
+
+  list.forEach((book) => {
+    const stockText = book.available ? `Tersedia: ${book.stock}` : book.stockLabel;
+    const pinjamBtn = book.available
+      ? `<a href="{{ url('Katalog_Buku') }}" class="block w-full rounded-lg bg-emerald-500 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition">Pinjam Buku</a>`
+      : `<span class="block w-full rounded-lg bg-amber-200 py-2 text-sm font-medium text-amber-900">Sedang Dipinjam</span>`;
+
+    container.innerHTML += `
+      <div class="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+        <img src="${escAttr(book.img)}" alt="${escAttr(book.title)}" onerror="this.onerror=null;this.src=defaultCover;" class="h-40 w-full rounded-lg object-cover">
+        <h6 class="mt-2 truncate font-semibold text-slate-800" title="${escAttr(book.title)}">${escAttr(book.title)}</h6>
+        <small class="text-slate-500">${escAttr(book.author)}</small><br>
+        <small class="text-slate-500">${escAttr(book.category)}</small><br>
+        <small class="text-slate-500">${escAttr(stockText)}</small>
+        <div class="mt-2 space-y-1">
+          <button type="button" data-book-id="${escAttr(book.id)}" class="js-rekomendasi-detail w-full rounded-lg bg-[#1E376E] py-2 text-sm font-medium text-white hover:bg-[#162d5c] transition">
+            Lihat Detail
+          </button>
+          ${pinjamBtn}
+        </div>
+      </div>
+    `;
+  });
+}
+
+async function fetchRekomendasi() {
+  const res = await fetch("{{ route('mahasiswa.buku.list') }}?limit=8&random=1", {
+    headers: { Accept: 'application/json' },
+  });
+  const json = await res.json();
+  books = json.data || [];
+  renderRekomendasi(books);
+}
 
 container.addEventListener('click', (e) => {
   const btn = e.target.closest('.js-rekomendasi-detail');
@@ -182,5 +170,7 @@ container.addEventListener('click', (e) => {
 modal.addEventListener('click', (e) => {
   if (e.target === modal) closeBookDetail();
 });
+
+fetchRekomendasi();
 </script>
 @endpush

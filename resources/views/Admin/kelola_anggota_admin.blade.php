@@ -3,49 +3,52 @@
 @section('title', 'Kelola Anggota Admin')
 @section('active_page', 'kelola-anggota')
 @section('page_title', 'Kelola Anggota')
+@section('page_subtitle', 'Kelola data mahasiswa dan anggota perpustakaan.')
 
 @section('content')
-<div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-  <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-    <div class="flex items-center gap-2">
-      <h2 class="text-lg font-semibold text-slate-800">Daftar Anggota</h2>
-      <button onclick="openTambahAnggotaModal()" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 transition">
-        <span>+</span>
-        <span>Daftar Anggota Baru</span>
+<div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-md">
+  <div class="flex flex-col gap-4 border-b border-slate-200 bg-gradient-to-r from-[#1E376E]/8 to-teal-500/10 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="flex items-center gap-2">
+        <i class="bi bi-people text-[#1E376E] text-lg"></i>
+        <h2 class="font-semibold text-[#1E376E]">Daftar Anggota</h2>
+      </div>
+      <button type="button" onclick="openTambahAnggotaModal()"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-600">
+        <i class="bi bi-plus-lg"></i> Daftar Anggota Baru
       </button>
     </div>
-
-    <div class="relative w-full md:w-72">
+    <div class="relative w-full lg:max-w-xs">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
       <input id="searchInput" type="text" placeholder="Cari Anggota, NIM, atau Tipe..."
-        class="w-full rounded-lg border border-slate-300 py-2 pl-3 pr-10 text-xs focus:border-blue-500 focus:outline-none">
-      <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </span>
+        class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
     </div>
   </div>
 
-  <div class="overflow-x-auto rounded-xl border border-slate-200">
-    <table class="min-w-full text-xs">
-      <thead class="bg-slate-100 text-slate-700">
-        <tr>
-          <th class="px-3 py-2 text-left font-semibold">Nim</th>
-          <th class="px-3 py-2 text-left font-semibold">Nama Lengkap</th>
-          <th class="px-3 py-2 text-left font-semibold">Tipe</th>
-          <th class="px-3 py-2 text-left font-semibold">Email</th>
-          <th class="px-3 py-2 text-left font-semibold">Status</th>
-          <th class="px-3 py-2 text-center font-semibold">Aksi</th>
+  <div class="overflow-x-auto px-5 pb-2">
+    <div id="anggota-empty" class="hidden rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center text-sm text-slate-500">
+      <i class="bi bi-person-x mb-2 block text-3xl text-slate-300"></i>
+      Tidak ada anggota yang cocok dengan pencarian.
+    </div>
+    <table class="w-full min-w-[800px] text-sm table-auto">
+      <thead>
+        <tr class="border-b border-slate-200 bg-slate-50/90 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <th class="px-4 py-3 whitespace-nowrap">NIM</th>
+          <th class="px-4 py-3">Nama Lengkap</th>
+          <th class="px-4 py-3 whitespace-nowrap">Tipe</th>
+          <th class="px-4 py-3">Email</th>
+          <th class="px-4 py-3 text-center whitespace-nowrap">Status</th>
+          <th class="px-4 py-3 text-center w-[90px]">Aksi</th>
         </tr>
       </thead>
-      <tbody id="anggotaTableBody" class="divide-y divide-slate-200 bg-white"></tbody>
+      <tbody id="anggotaTableBody" class="divide-y divide-slate-100"></tbody>
     </table>
   </div>
 
-  <div id="paginationContainer" class="mt-4 flex items-center justify-center gap-1 text-xs"></div>
+  <div id="paginationContainer" class="flex items-center justify-center gap-1 border-t border-slate-100 px-5 py-4 text-sm"></div>
 </div>
 
-<div id="tambahAnggotaModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+<div id="tambahAnggotaModal" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-50 justify-center items-center w-full h-full p-4" tabindex="-1" aria-hidden="true">
   <div class="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-4 shadow-2xl">
     <h3 id="anggotaModalTitle" class="mb-3 border-b border-slate-200 pb-2 text-sm font-semibold text-slate-700">Informasi Anggota</h3>
 
@@ -72,6 +75,13 @@
         <input id="newEmail" type="email" value="luthfiwidi204@gmail.com"
           class="w-full rounded border border-slate-300 px-2 py-1.5 focus:border-blue-500 focus:outline-none">
       </div>
+      <div>
+        <label class="mb-1 block font-medium text-slate-600">Kata Sandi</label>
+        <input id="newPassword" type="password" value=""
+          class="w-full rounded border border-slate-300 px-2 py-1.5 focus:border-blue-500 focus:outline-none"
+          placeholder="Masukkan kata sandi">
+        <p class="mt-1 text-[11px] text-slate-500">Jika kosong, kata sandi akan otomatis menggunakan NIM/NIP.</p>
+      </div>
     </div>
 
     <div class="mt-4 flex justify-end gap-2">
@@ -87,7 +97,7 @@
   </div>
 </div>
 
-<div id="hapusAnggotaModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+<div id="hapusAnggotaModal" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-50 justify-center items-center w-full h-full p-4" tabindex="-1" aria-hidden="true">
   <div class="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
     <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -113,58 +123,73 @@
 
 @push('scripts')
 <script>
-const anggotaData = [
-  { nim: "3312501077", nama: "Luthfi Dwi Apriyadi", tipe: "Mahasiswa", email: "luthfiwidi204@gmail.com", status: "Aktif" },
-  { nim: "3312601082", nama: "Cristh Velato Arioranga", tipe: "Mahasiswa", email: "crishtvelato@gmail.com", status: "Aktif" },
-  { nim: "3312501085", nama: "Muhammad Zaky Sadewa", tipe: "Mahasiswa", email: "sdwevcoe44@gmail.com", status: "Aktif" },
-  { nim: "3312501090", nama: "Andi Pratama", tipe: "Mahasiswa", email: "andi.pratama@gmail.com", status: "Aktif" },
-  { nim: "3312501091", nama: "Salsa Putri", tipe: "Mahasiswa", email: "salsaputri@gmail.com", status: "Aktif" },
-  { nim: "3312501092", nama: "Rafi Maulana", tipe: "Mahasiswa", email: "rafimaulana@gmail.com", status: "Aktif" },
-  { nim: "3312501093", nama: "Nadia Rahma", tipe: "Mahasiswa", email: "nadiarahma@gmail.com", status: "Aktif" },
-  { nim: "3312501094", nama: "Ihsan Fikri", tipe: "Mahasiswa", email: "ihsanfikri@gmail.com", status: "Aktif" },
-  { nim: "3312501095", nama: "Putri Ayu", tipe: "Mahasiswa", email: "putriayu@gmail.com", status: "Aktif" },
-  { nim: "3312501096", nama: "Dimas Saputra", tipe: "Mahasiswa", email: "dimassaputra@gmail.com", status: "Aktif" }
-];
+let anggotaData = [];
 
 const rowsPerPage = 8;
 let currentPage = 1;
-let filteredData = [...anggotaData];
-let editTargetNim = null;
-let pendingDeleteNim = null;
+let filteredData = [];
+let editTargetId = null;
+let pendingDeleteId = null;
 
 const tbody = document.getElementById("anggotaTableBody");
 const paginationContainer = document.getElementById("paginationContainer");
 const searchInput = document.getElementById("searchInput");
 const tambahAnggotaModal = document.getElementById("tambahAnggotaModal");
 const hapusAnggotaModal = document.getElementById("hapusAnggotaModal");
+const anggotaEmptyEl = document.getElementById("anggota-empty");
+const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+async function fetchAnggota() {
+  const res = await fetch("{{ route('admin.anggota.list') }}", { headers: { 'Accept': 'application/json' } });
+  const json = await res.json();
+  anggotaData = (json.data || []).map((r) => ({ ...r }));
+  filteredData = [...anggotaData];
+  currentPage = 1;
+  renderTable();
+}
+
+function getInitials(nama) {
+  return nama.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+function tipeBadge(tipe) {
+  return tipe === "Admin"
+    ? '<span class="inline-flex items-center gap-1 rounded-md bg-violet-500 px-2 py-0.5 text-xs font-semibold text-white"><i class="bi bi-shield-fill-check"></i> Admin</span>'
+    : '<span class="inline-flex items-center gap-1 rounded-md bg-[#1E376E] px-2 py-0.5 text-xs font-semibold text-white"><i class="bi bi-mortarboard-fill"></i> Mahasiswa</span>';
+}
 
 function renderTable() {
   tbody.innerHTML = "";
+  if (anggotaEmptyEl) anggotaEmptyEl.classList.toggle("hidden", filteredData.length > 0);
   const start = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredData.slice(start, start + rowsPerPage);
 
   currentRows.forEach((item) => {
+    const initials = getInitials(item.nama);
+    const nim = escHtml(item.nim);
+    const rowId = escHtml(item.id);
     tbody.innerHTML += `
-      <tr>
-        <td class="px-3 py-2">${item.nim}</td>
-        <td class="px-3 py-2">${item.nama}</td>
-        <td class="px-3 py-2">${item.tipe}</td>
-        <td class="px-3 py-2 underline decoration-slate-300">${item.email}</td>
-        <td class="px-3 py-2">
-          <span class="rounded bg-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-white">${item.status}</span>
+      <tr class="hover:bg-slate-50/80 transition-colors">
+        <td class="px-4 py-3 align-middle font-medium text-slate-700 whitespace-nowrap">${nim}</td>
+        <td class="px-4 py-3 align-middle">
+          <div class="flex items-center gap-3 min-w-[180px]">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1E376E]/10 text-sm font-bold text-[#1E376E]">${initials}</div>
+            <span class="font-semibold text-slate-800">${escHtml(item.nama)}</span>
+          </div>
         </td>
-        <td class="px-3 py-2">
-          <div class="flex items-center justify-center gap-1">
-            <button onclick="openEditAnggotaModal('${item.nim}')" class="rounded bg-blue-600 p-1 text-white hover:bg-blue-700" title="Edit">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L12 15l-4 1 1-4 8.586-8.586z" />
-              </svg>
-            </button>
-            <button onclick="deleteAnggota('${item.nim}')" class="rounded bg-rose-500 p-1 text-white hover:bg-rose-600" title="Hapus">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a1 1 0 011-1h4a1 1 0 011 1v2" />
-              </svg>
-            </button>
+        <td class="px-4 py-3 align-middle">${tipeBadge(item.tipe)}</td>
+        <td class="px-4 py-3 align-middle text-slate-600">${escHtml(item.email)}</td>
+        <td class="px-4 py-3 align-middle text-center">
+          <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500 px-2.5 py-1 text-[11px] font-bold text-white"><i class="bi bi-check-circle-fill"></i> ${escHtml(item.status)}</span>
+        </td>
+        <td class="px-4 py-3 align-middle">
+          <div class="flex items-center justify-center gap-1.5">
+            <button type="button" onclick="openEditAnggotaModal('${rowId}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500 text-white hover:bg-sky-600" title="Edit"><i class="bi bi-pencil text-sm"></i></button>
+            <button type="button" onclick="deleteAnggota('${rowId}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500 text-white hover:bg-rose-600" title="Hapus"><i class="bi bi-trash text-sm"></i></button>
           </div>
         </td>
       </tr>
@@ -186,7 +211,7 @@ function renderPagination() {
   for (let i = 1; i <= totalPages; i++) {
     paginationContainer.innerHTML += `
       <button onclick="setPage(${i})"
-        class="rounded px-2 py-1 ${i === currentPage ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}">${i}</button>
+        class="rounded-lg px-3 py-1.5 ${i === currentPage ? 'bg-[#1E376E] text-white' : 'text-slate-600 hover:bg-slate-100'}">${i}</button>
     `;
   }
 
@@ -215,83 +240,104 @@ function filterAnggota() {
 }
 
 function openTambahAnggotaModal() {
-  editTargetNim = null;
+  editTargetId = null;
   document.getElementById("anggotaModalTitle").textContent = "Informasi Anggota";
   document.getElementById("anggotaSubmitButton").textContent = "Tambah";
   document.getElementById("newNama").value = "";
   document.getElementById("newNim").value = "";
   document.getElementById("newTipe").value = "Mahasiswa";
   document.getElementById("newEmail").value = "";
+  document.getElementById("newPassword").value = "";
 
-  tambahAnggotaModal.classList.remove("hidden");
-  tambahAnggotaModal.classList.add("flex");
+  fbShow('tambahAnggotaModal');
 }
 
 function closeTambahAnggotaModal() {
-  tambahAnggotaModal.classList.remove("flex");
-  tambahAnggotaModal.classList.add("hidden");
+  fbHide('tambahAnggotaModal');
 }
 
-function submitAnggotaForm() {
+async function submitAnggotaForm() {
   const nama = document.getElementById("newNama").value.trim();
   const nim = document.getElementById("newNim").value.trim();
   const tipe = document.getElementById("newTipe").value;
   const email = document.getElementById("newEmail").value.trim();
+  const password = document.getElementById("newPassword").value;
 
   if (!nama || !nim || !email) return;
 
-  if (editTargetNim) {
-    const index = anggotaData.findIndex((item) => item.nim === editTargetNim);
-    if (index !== -1) {
-      anggotaData[index] = { ...anggotaData[index], nim, nama, tipe, email };
-    }
-  } else {
-    anggotaData.unshift({ nim, nama, tipe, email, status: "Aktif" });
+  const payload = { nama, nim, tipe, email, password };
+  const url = editTargetId ? `{{ route('admin.anggota.list') }}/${encodeURIComponent(editTargetId)}` : `{{ route('admin.anggota.store') }}`;
+  const method = editTargetId ? 'PUT' : 'POST';
+
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    alert(err.message || 'Gagal menyimpan data anggota.');
+    return;
   }
 
-  filterAnggota();
+  await fetchAnggota();
+
   closeTambahAnggotaModal();
 }
 
-function openEditAnggotaModal(nim) {
-  const data = anggotaData.find((item) => item.nim === nim);
+function openEditAnggotaModal(id) {
+  const data = anggotaData.find((item) => String(item.id) === String(id));
   if (!data) return;
 
-  editTargetNim = nim;
+  editTargetId = id;
   document.getElementById("anggotaModalTitle").textContent = "Informasi Anggota";
   document.getElementById("anggotaSubmitButton").textContent = "Simpan";
   document.getElementById("newNama").value = data.nama;
   document.getElementById("newNim").value = data.nim;
   document.getElementById("newTipe").value = data.tipe;
   document.getElementById("newEmail").value = data.email;
+  document.getElementById("newPassword").value = "";
 
-  tambahAnggotaModal.classList.remove("hidden");
-  tambahAnggotaModal.classList.add("flex");
+  fbShow('tambahAnggotaModal');
 }
 
-function deleteAnggota(nim) {
-  pendingDeleteNim = nim;
-  hapusAnggotaModal.classList.remove("hidden");
-  hapusAnggotaModal.classList.add("flex");
+function deleteAnggota(id) {
+  pendingDeleteId = id;
+  fbShow('hapusAnggotaModal');
 }
 
 function closeHapusAnggotaModal() {
-  pendingDeleteNim = null;
-  hapusAnggotaModal.classList.remove("flex");
-  hapusAnggotaModal.classList.add("hidden");
+  pendingDeleteId = null;
+  fbHide('hapusAnggotaModal');
 }
 
-function confirmDeleteAnggota() {
-  if (!pendingDeleteNim) return;
-  const index = anggotaData.findIndex((item) => item.nim === pendingDeleteNim);
-  if (index !== -1) {
-    anggotaData.splice(index, 1);
-    filterAnggota();
+async function confirmDeleteAnggota() {
+  if (!pendingDeleteId) return;
+
+  const res = await fetch(`{{ route('admin.anggota.list') }}/${encodeURIComponent(pendingDeleteId)}`, {
+    method: 'DELETE',
+    headers: {
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    alert(err.message || 'Gagal menghapus anggota.');
+    return;
   }
+
+  await fetchAnggota();
   closeHapusAnggotaModal();
 }
 
 searchInput.addEventListener("keyup", filterAnggota);
-renderTable();
+fetchAnggota();
 </script>
 @endpush
