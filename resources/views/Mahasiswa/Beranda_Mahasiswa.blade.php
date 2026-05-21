@@ -46,7 +46,7 @@
       </div>
       <div class="space-y-2 text-sm text-slate-700">
         <h3 id="bookDetailTitle" class="text-lg font-bold text-slate-900"></h3>
-        <p><span class="font-semibold text-slate-600">Kode Buku:</span> <span id="bookDetailCode"></span></p>
+        <p><span class="font-semibold text-slate-600">Nomor Panggil:</span> <span id="bookDetailCode"></span></p>
         <p><span class="font-semibold text-slate-600">Pengarang:</span> <span id="bookDetailAuthor"></span></p>
         <p><span class="font-semibold text-slate-600">Penerbit:</span> <span id="bookDetailPublisher"></span></p>
         <p><span class="font-semibold text-slate-600">Tahun Terbit:</span> <span id="bookDetailYear"></span></p>

@@ -14,13 +14,13 @@
     <h2 class="font-semibold text-[#1E376E]">Filter Buku</h2>
   </div>
   <div class="p-5">
-    <p class="mb-4 text-sm text-slate-500">Cari berdasarkan judul, pengarang, atau kategori.</p>
+    <p class="mb-4 text-sm text-slate-500">Cari judul, pengarang, penerbit, kategori, nomor panggil, atau ISBN.</p>
     <div class="grid gap-3 md:grid-cols-2">
       <div class="relative">
         <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input type="text" id="searchInput"
           class="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20"
-          placeholder="Cari judul, pengarang, atau kategori...">
+          placeholder="Cari nama buku, pengarang, nomor panggil...">
       </div>
       <div class="relative">
         <i class="bi bi-tags absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -66,7 +66,7 @@
       </div>
       <div class="space-y-2 text-sm text-slate-700">
         <h3 id="modalTitle" class="text-lg font-bold text-slate-900"></h3>
-        <p><span class="font-semibold text-slate-600">Kode Buku:</span> <span id="modalCode"></span></p>
+        <p><span class="font-semibold text-slate-600">Nomor Panggil:</span> <span id="modalCode"></span></p>
         <p><span class="font-semibold text-slate-600">Pengarang:</span> <span id="modalAuthor"></span></p>
         <p><span class="font-semibold text-slate-600">Penerbit:</span> <span id="modalPublisher"></span></p>
         <p><span class="font-semibold text-slate-600">Tahun Terbit:</span> <span id="modalYear"></span></p>
@@ -107,7 +107,7 @@
         <img id="pinjamImg" src="" alt="" class="w-full rounded-xl border border-slate-200 object-cover shadow-md">
       </div>
       <div class="space-y-3 text-sm">
-        <p><span class="font-semibold text-slate-600">Kode Buku:</span> <span id="pinjamCode"></span></p>
+        <p><span class="font-semibold text-slate-600">Nomor Panggil:</span> <span id="pinjamCode"></span></p>
         <p><span class="font-semibold text-slate-600">Judul:</span> <span id="pinjamTitle" class="font-medium text-slate-900"></span></p>
         <p><span class="font-semibold text-slate-600">Pengarang:</span> <span id="pinjamAuthor"></span></p>
         <div>
@@ -142,8 +142,11 @@
 @push('scripts')
 <script>
 let books = [];
+let searchDebounce = null;
 const defaultCover = "{{ asset('images/' . rawurlencode('Cover buku 1.jpg')) }}";
 
+const searchInput = document.getElementById('searchInput');
+const categoryFilter = document.getElementById('categoryFilter');
 const container = document.getElementById('book-container');
 const emptyState = document.getElementById('book-empty');
 const bookCount = document.getElementById('bookCount');
@@ -276,28 +279,27 @@ pinjamModal.addEventListener('click', (e) => {
   if (e.target === pinjamModal) closePinjamModal();
 });
 
-function filterBooks() {
-  const keyword = searchInput.value.toLowerCase();
-  const category = categoryFilter.value;
-
-  const filtered = books.filter((book) => {
-    const matchKeyword =
-      book.title.toLowerCase().includes(keyword) ||
-      book.author.toLowerCase().includes(keyword) ||
-      book.publisher.toLowerCase().includes(keyword) ||
-      book.category.toLowerCase().includes(keyword);
-    const matchCategory = category === 'all' || book.category === category;
-    return matchKeyword && matchCategory;
-  });
-
-  renderBooks(filtered);
+function buildBooksListUrl() {
+  const params = new URLSearchParams();
+  const q = searchInput.value.trim();
+  const cat = categoryFilter.value;
+  if (q) params.set('q', q);
+  if (cat && cat !== 'all') params.set('category', cat);
+  const qs = params.toString();
+  return "{{ route('mahasiswa.buku.list') }}" + (qs ? `?${qs}` : '');
 }
 
-searchInput.addEventListener('keyup', filterBooks);
-categoryFilter.addEventListener('change', filterBooks);
+function scheduleBookSearch() {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => fetchBooks(), 350);
+}
+
+searchInput.addEventListener('keyup', scheduleBookSearch);
+searchInput.addEventListener('search', scheduleBookSearch);
+categoryFilter.addEventListener('change', fetchBooks);
 
 async function fetchBooks() {
-  const res = await fetch("{{ route('mahasiswa.buku.list') }}", {
+  const res = await fetch(buildBooksListUrl(), {
     headers: { Accept: 'application/json' },
   });
   const json = await res.json();
