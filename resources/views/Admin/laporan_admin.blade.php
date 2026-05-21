@@ -205,7 +205,7 @@
       <div class="space-y-3">
         <div><label class="mb-1 block text-xs font-semibold text-slate-600">Nama Peminjam</label>
         <input id="detailMember" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>
-        <div><label class="mb-1 block text-xs font-semibold text-slate-600">Nomor Panggil</label>
+        <div><label class="mb-1 block text-xs font-semibold text-slate-600">Kode Buku</label>
         <input id="detailBookCode" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>
         <div><label class="mb-1 block text-xs font-semibold text-slate-600">Judul Buku</label>
         <input id="detailBookTitle" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>

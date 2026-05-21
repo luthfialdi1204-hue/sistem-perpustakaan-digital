@@ -11,11 +11,11 @@
     <h2 class="font-semibold text-[#1E376E]">Filter Buku</h2>
   </div>
   <div class="p-5">
-    <p class="mb-4 text-sm text-slate-500">Cari judul, pengarang, penerbit, kategori, nomor panggil, atau ISBN.</p>
+    <p class="mb-4 text-sm text-slate-500">Cari berdasarkan judul, pengarang, penerbit, atau kategori.</p>
     <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
     <div class="relative md:col-span-7">
       <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-    <input id="searchInput" type="text" placeholder="Cari nama buku, pengarang, nomor panggil..."
+    <input id="searchInput" type="text" placeholder="Cari judul, pengarang, atau penerbit..."
       class="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
     </div>
     <div class="relative md:col-span-3">
@@ -72,7 +72,7 @@
           <p class="col-span-2 font-medium" id="detailTitle">-</p>
         </div>
         <div class="grid grid-cols-3 gap-2">
-          <p class="text-slate-500">Nomor Panggil</p>
+          <p class="text-slate-500">Kode Buku</p>
           <p class="col-span-2 font-medium" id="detailCode">-</p>
         </div>
         <div class="grid grid-cols-3 gap-2">
@@ -151,8 +151,8 @@
 
     <div class="grid gap-x-6 gap-y-3 md:grid-cols-2">
       <div>
-        <label class="mb-1 block text-xs font-semibold text-slate-600">Nomor Panggil<span class="text-rose-500">*</span></label>
-        <input id="editCode" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <label class="mb-1 block text-xs font-semibold text-slate-600">Kode Buku<span class="text-rose-500">*</span></label>
+        <input id="editCode" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase">
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">ISBN<span class="text-rose-500">*</span></label>
@@ -224,8 +224,8 @@
 
     <div class="grid gap-x-6 gap-y-3 md:grid-cols-2">
       <div>
-        <label class="mb-1 block text-xs font-semibold text-slate-600">Nomor Panggil<span class="text-rose-500">*</span></label>
-        <input id="tambahCode" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <label class="mb-1 block text-xs font-semibold text-slate-600">Kode Buku<span class="text-rose-500">*</span></label>
+        <input id="tambahCode" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase">
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">ISBN</label>
@@ -331,20 +331,9 @@ let selectedBook = null;
 let filteredBooks = [];
 let currentPage = 1;
 const booksPerPage = 6;
-let searchDebounce = null;
-
-function buildBooksListUrl() {
-  const params = new URLSearchParams();
-  const q = searchInput.value.trim();
-  const cat = categoryFilter.value;
-  if (q) params.set("q", q);
-  if (cat && cat !== "all") params.set("category", cat);
-  const qs = params.toString();
-  return "{{ route('admin.buku.list') }}" + (qs ? `?${qs}` : "");
-}
 
 async function fetchBooks() {
-  const res = await fetch(buildBooksListUrl(), { headers: { Accept: "application/json" } });
+  const res = await fetch("{{ route('admin.buku.list') }}", { headers: { Accept: "application/json" } });
   const json = await res.json();
   books = json.data || [];
   filteredBooks = [...books];
@@ -432,7 +421,7 @@ async function saveEditBook() {
   if (!selectedBook) return;
   const payload = bookPayloadFromEdit();
   if (!payload.code || !payload.title || !payload.author || !payload.publisher) {
-    alert("Nomor panggil, judul, pengarang, dan penerbit wajib diisi.");
+    alert("Kode buku, judul, pengarang, dan penerbit wajib diisi.");
     return;
   }
 
@@ -465,7 +454,7 @@ async function saveEditBook() {
 async function saveTambahBook() {
   const payload = bookPayloadFromTambah();
   if (!payload.code || !payload.title || !payload.author || !payload.publisher) {
-    alert("Nomor panggil, judul, pengarang, dan penerbit wajib diisi.");
+    alert("Kode buku, judul, pengarang, dan penerbit wajib diisi.");
     return;
   }
   if (payload.stock === "" || Number(payload.stock) < 0) {
@@ -559,9 +548,21 @@ function changePage(page) {
   renderBooks(filteredBooks);
 }
 
-function scheduleBookSearch() {
-  clearTimeout(searchDebounce);
-  searchDebounce = setTimeout(() => fetchBooks(), 350);
+function filterBooks() {
+  const keyword = searchInput.value.toLowerCase();
+  const category = categoryFilter.value;
+
+  filteredBooks = books.filter((book) => {
+    const matchKeyword =
+      book.title.toLowerCase().includes(keyword) ||
+      book.author.toLowerCase().includes(keyword) ||
+      book.publisher.toLowerCase().includes(keyword);
+    const matchCategory = category === "all" || book.category === category;
+    return matchKeyword && matchCategory;
+  });
+
+  currentPage = 1;
+  renderBooks(filteredBooks);
 }
 
 function openDetailModal(book) {
@@ -680,9 +681,8 @@ bookContainer.addEventListener("click", (e) => {
   if (book) openDetailModal(book);
 });
 
-searchInput.addEventListener("keyup", scheduleBookSearch);
-searchInput.addEventListener("search", scheduleBookSearch);
-categoryFilter.addEventListener("change", fetchBooks);
+searchInput.addEventListener("keyup", filterBooks);
+categoryFilter.addEventListener("change", filterBooks);
 document.getElementById("tambahCover")?.addEventListener("change", (e) => {
   previewCoverInput(e.target, document.getElementById("tambahPreviewImg"), document.getElementById("tambahCoverPlaceholder"));
 });
