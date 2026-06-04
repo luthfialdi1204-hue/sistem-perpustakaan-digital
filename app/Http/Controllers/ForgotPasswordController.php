@@ -171,8 +171,7 @@ class ForgotPasswordController extends Controller
     public function resetPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            // Kolom `kata_sandi` di tabel `user` adalah varchar(30).
-            'password' => ['required', 'min:6', 'max:30', 'confirmed'],
+            'password' => ['required', 'min:6', 'max:255', 'confirmed'],
         ]);
 
         if ($validator->fails()) {
@@ -197,7 +196,7 @@ class ForgotPasswordController extends Controller
             return back()->withErrors(['password' => 'Pengguna tidak ditemukan.']);
         }
 
-        // Tabel legacy `user` menyimpan kata_sandi plaintext (varchar(30)).
+        // Tabel `user` menyimpan kata_sandi plaintext (varchar(255)).
         $user->password = $request->password;
         $user->save();
 

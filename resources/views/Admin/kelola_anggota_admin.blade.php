@@ -33,7 +33,7 @@
     <table class="w-full min-w-[800px] text-sm table-auto">
       <thead>
         <tr class="border-b border-slate-200 bg-slate-50/90 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-          <th class="px-4 py-3 whitespace-nowrap">NIM</th>
+          <th class="px-4 py-3 whitespace-nowrap">NIM/NIP</th>
           <th class="px-4 py-3">Nama Lengkap</th>
           <th class="px-4 py-3 whitespace-nowrap">Tipe</th>
           <th class="px-4 py-3">Email</th>
@@ -55,12 +55,12 @@
     <div class="space-y-2 text-xs">
       <div>
         <label class="mb-1 block font-medium text-slate-600">Nama Lengkap</label>
-        <input id="newNama" type="text" value="Luthfi Dwi Apriyadi"
+        <input id="newNama" type="text" value=""
           class="w-full rounded border border-slate-300 px-2 py-1.5 focus:border-blue-500 focus:outline-none">
       </div>
       <div>
         <label class="mb-1 block font-medium text-slate-600">Nim</label>
-        <input id="newNim" type="text" value="3312501077"
+        <input id="newNim" type="text" value=""
           class="w-full rounded border border-slate-300 px-2 py-1.5 focus:border-blue-500 focus:outline-none">
       </div>
       <div>
@@ -72,7 +72,7 @@
       </div>
       <div>
         <label class="mb-1 block font-medium text-slate-600">Email</label>
-        <input id="newEmail" type="email" value="luthfiwidi204@gmail.com"
+        <input id="newEmail" type="email" value=""
           class="w-full rounded border border-slate-300 px-2 py-1.5 focus:border-blue-500 focus:outline-none">
       </div>
       <div>
@@ -123,221 +123,13 @@
 
 @push('scripts')
 <script>
-let anggotaData = [];
-
-const rowsPerPage = 8;
-let currentPage = 1;
-let filteredData = [];
-let editTargetId = null;
-let pendingDeleteId = null;
-
-const tbody = document.getElementById("anggotaTableBody");
-const paginationContainer = document.getElementById("paginationContainer");
-const searchInput = document.getElementById("searchInput");
-const tambahAnggotaModal = document.getElementById("tambahAnggotaModal");
-const hapusAnggotaModal = document.getElementById("hapusAnggotaModal");
-const anggotaEmptyEl = document.getElementById("anggota-empty");
-const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
-async function fetchAnggota() {
-  const res = await fetch("{{ route('admin.anggota.list') }}", { headers: { 'Accept': 'application/json' } });
-  const json = await res.json();
-  anggotaData = (json.data || []).map((r) => ({ ...r }));
-  filteredData = [...anggotaData];
-  currentPage = 1;
-  renderTable();
-}
-
-function getInitials(nama) {
-  return nama.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-}
-
-function tipeBadge(tipe) {
-  return tipe === "Admin"
-    ? '<span class="inline-flex items-center gap-1 rounded-md bg-violet-500 px-2 py-0.5 text-xs font-semibold text-white"><i class="bi bi-shield-fill-check"></i> Admin</span>'
-    : '<span class="inline-flex items-center gap-1 rounded-md bg-[#1E376E] px-2 py-0.5 text-xs font-semibold text-white"><i class="bi bi-mortarboard-fill"></i> Mahasiswa</span>';
-}
-
-function renderTable() {
-  tbody.innerHTML = "";
-  if (anggotaEmptyEl) anggotaEmptyEl.classList.toggle("hidden", filteredData.length > 0);
-  const start = (currentPage - 1) * rowsPerPage;
-  const currentRows = filteredData.slice(start, start + rowsPerPage);
-
-  currentRows.forEach((item) => {
-    const initials = getInitials(item.nama);
-    const nim = escHtml(item.nim);
-    const rowId = escHtml(item.id);
-    tbody.innerHTML += `
-      <tr class="hover:bg-slate-50/80 transition-colors">
-        <td class="px-4 py-3 align-middle font-medium text-slate-700 whitespace-nowrap">${nim}</td>
-        <td class="px-4 py-3 align-middle">
-          <div class="flex items-center gap-3 min-w-[180px]">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1E376E]/10 text-sm font-bold text-[#1E376E]">${initials}</div>
-            <span class="font-semibold text-slate-800">${escHtml(item.nama)}</span>
-          </div>
-        </td>
-        <td class="px-4 py-3 align-middle">${tipeBadge(item.tipe)}</td>
-        <td class="px-4 py-3 align-middle text-slate-600">${escHtml(item.email)}</td>
-        <td class="px-4 py-3 align-middle text-center">
-          <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500 px-2.5 py-1 text-[11px] font-bold text-white"><i class="bi bi-check-circle-fill"></i> ${escHtml(item.status)}</span>
-        </td>
-        <td class="px-4 py-3 align-middle">
-          <div class="flex items-center justify-center gap-1.5">
-            <button type="button" onclick="openEditAnggotaModal('${rowId}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500 text-white hover:bg-sky-600" title="Edit"><i class="bi bi-pencil text-sm"></i></button>
-            <button type="button" onclick="deleteAnggota('${rowId}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500 text-white hover:bg-rose-600" title="Hapus"><i class="bi bi-trash text-sm"></i></button>
-          </div>
-        </td>
-      </tr>
-    `;
-  });
-
-  renderPagination();
-}
-
-function renderPagination() {
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
-  paginationContainer.innerHTML = "";
-
-  paginationContainer.innerHTML += `
-    <button onclick="setPage(${Math.max(1, currentPage - 1)})"
-      class="px-2 py-1 text-slate-500 hover:text-slate-700">Previous</button>
-  `;
-
-  for (let i = 1; i <= totalPages; i++) {
-    paginationContainer.innerHTML += `
-      <button onclick="setPage(${i})"
-        class="rounded-lg px-3 py-1.5 ${i === currentPage ? 'bg-[#1E376E] text-white' : 'text-slate-600 hover:bg-slate-100'}">${i}</button>
-    `;
-  }
-
-  paginationContainer.innerHTML += `
-    <button onclick="setPage(${Math.min(totalPages, currentPage + 1)})"
-      class="px-2 py-1 text-slate-500 hover:text-slate-700">Next</button>
-  `;
-}
-
-function setPage(page) {
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
-  if (page < 1 || page > totalPages) return;
-  currentPage = page;
-  renderTable();
-}
-
-function filterAnggota() {
-  const keyword = searchInput.value.toLowerCase();
-  filteredData = anggotaData.filter((item) =>
-    item.nim.toLowerCase().includes(keyword) ||
-    item.nama.toLowerCase().includes(keyword) ||
-    item.tipe.toLowerCase().includes(keyword)
-  );
-  currentPage = 1;
-  renderTable();
-}
-
-function openTambahAnggotaModal() {
-  editTargetId = null;
-  document.getElementById("anggotaModalTitle").textContent = "Informasi Anggota";
-  document.getElementById("anggotaSubmitButton").textContent = "Tambah";
-  document.getElementById("newNama").value = "";
-  document.getElementById("newNim").value = "";
-  document.getElementById("newTipe").value = "Mahasiswa";
-  document.getElementById("newEmail").value = "";
-  document.getElementById("newPassword").value = "";
-
-  fbShow('tambahAnggotaModal');
-}
-
-function closeTambahAnggotaModal() {
-  fbHide('tambahAnggotaModal');
-}
-
-async function submitAnggotaForm() {
-  const nama = document.getElementById("newNama").value.trim();
-  const nim = document.getElementById("newNim").value.trim();
-  const tipe = document.getElementById("newTipe").value;
-  const email = document.getElementById("newEmail").value.trim();
-  const password = document.getElementById("newPassword").value;
-
-  if (!nama || !nim || !email) return;
-
-  const payload = { nama, nim, tipe, email, password };
-  const url = editTargetId ? `{{ route('admin.anggota.list') }}/${encodeURIComponent(editTargetId)}` : `{{ route('admin.anggota.store') }}`;
-  const method = editTargetId ? 'PUT' : 'POST';
-
-  const res = await fetch(url, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-CSRF-TOKEN': csrf,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    alert(err.message || 'Gagal menyimpan data anggota.');
-    return;
-  }
-
-  await fetchAnggota();
-
-  closeTambahAnggotaModal();
-}
-
-function openEditAnggotaModal(id) {
-  const data = anggotaData.find((item) => String(item.id) === String(id));
-  if (!data) return;
-
-  editTargetId = id;
-  document.getElementById("anggotaModalTitle").textContent = "Informasi Anggota";
-  document.getElementById("anggotaSubmitButton").textContent = "Simpan";
-  document.getElementById("newNama").value = data.nama;
-  document.getElementById("newNim").value = data.nim;
-  document.getElementById("newTipe").value = data.tipe;
-  document.getElementById("newEmail").value = data.email;
-  document.getElementById("newPassword").value = "";
-
-  fbShow('tambahAnggotaModal');
-}
-
-function deleteAnggota(id) {
-  pendingDeleteId = id;
-  fbShow('hapusAnggotaModal');
-}
-
-function closeHapusAnggotaModal() {
-  pendingDeleteId = null;
-  fbHide('hapusAnggotaModal');
-}
-
-async function confirmDeleteAnggota() {
-  if (!pendingDeleteId) return;
-
-  const res = await fetch(`{{ route('admin.anggota.list') }}/${encodeURIComponent(pendingDeleteId)}`, {
-    method: 'DELETE',
-    headers: {
-      'Accept': 'application/json',
-      'X-CSRF-TOKEN': csrf,
-    },
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    alert(err.message || 'Gagal menghapus anggota.');
-    return;
-  }
-
-  await fetchAnggota();
-  closeHapusAnggotaModal();
-}
-
-searchInput.addEventListener("keyup", filterAnggota);
-fetchAnggota();
+window.KelolaAnggotaCfg = {
+  csrf: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+  listUrl: @json(route('admin.anggota.list')),
+  showUrl: (id) => @json(url('/admin/anggota')) + '/' + encodeURIComponent(id),
+  storeUrl: @json(route('admin.anggota.store')),
+  perPage: 8,
+};
 </script>
+<script src="{{ asset('js/admin/kelola-anggota.js') }}?v={{ filemtime(public_path('js/admin/kelola-anggota.js')) }}"></script>
 @endpush

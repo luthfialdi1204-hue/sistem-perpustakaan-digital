@@ -15,7 +15,7 @@
     </div>
     <div class="min-w-0">
       <p class="text-sm text-slate-500">Total Peminjaman</p>
-      <p id="statTotal" class="text-2xl font-bold text-slate-800">0</p>
+      <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['active_total'] ?? 0) }}</p>
       <p class="mt-0.5 text-xs text-emerald-600 flex items-center gap-0.5">
         <i class="bi bi-arrow-up-short text-base"></i> Semua transaksi tercatat
       </p>
@@ -28,8 +28,13 @@
     </div>
     <div class="min-w-0">
       <p class="text-sm text-slate-500">Selesai</p>
-      <p id="statSelesai" class="text-2xl font-bold text-slate-800">0</p>
-      <p id="statSelesaiPct" class="mt-0.5 text-xs text-slate-500">0% dari total</p>
+      <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['selesai'] ?? 0) }}</p>
+      @php
+        $activeTotal = max(0, (int)($stats['active_total'] ?? 0));
+        $selesai = max(0, (int)($stats['selesai'] ?? 0));
+        $selesaiPct = $activeTotal ? round(($selesai / $activeTotal) * 100, 1) : 0;
+      @endphp
+      <p class="mt-0.5 text-xs text-slate-500">{{ rtrim(rtrim((string)$selesaiPct, '0'), '.') }}% dari total aktif</p>
     </div>
   </div>
 
@@ -39,8 +44,12 @@
     </div>
     <div class="min-w-0">
       <p class="text-sm text-slate-500">Terlambat</p>
-      <p id="statTerlambat" class="text-2xl font-bold text-slate-800">0</p>
-      <p id="statTerlambatPct" class="mt-0.5 text-xs text-slate-500">0% dari total</p>
+      <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['terlambat'] ?? 0) }}</p>
+      @php
+        $terlambat = max(0, (int)($stats['terlambat'] ?? 0));
+        $terlambatPct = $activeTotal ? round(($terlambat / $activeTotal) * 100, 1) : 0;
+      @endphp
+      <p class="mt-0.5 text-xs text-slate-500">{{ rtrim(rtrim((string)$terlambatPct, '0'), '.') }}% dari total aktif</p>
     </div>
   </div>
 
@@ -50,9 +59,9 @@
     </div>
     <div class="min-w-0">
       <p class="text-sm text-slate-500">Total Denda</p>
-      <p id="statDenda" class="text-2xl font-bold text-slate-800">Rp0</p>
-      <p id="statDendaNote" class="mt-0.5 text-xs text-rose-500 flex items-center gap-0.5">
-        <i class="bi bi-exclamation-circle"></i> <span id="statDendaNoteText">Tidak ada denda</span>
+      <p class="text-2xl font-bold text-slate-800">Rp{{ number_format((int)($stats['total_denda'] ?? 0), 0, ',', '.') }}</p>
+      <p class="mt-0.5 text-xs text-rose-500 flex items-center gap-0.5">
+        <i class="bi bi-exclamation-circle"></i> <span>{{ ((int)($stats['terlambat'] ?? 0)) ? ((int)($stats['terlambat'] ?? 0)).' pinjaman terlambat' : 'Tidak ada denda' }}</span>
       </p>
     </div>
   </div>
@@ -65,40 +74,41 @@
     <h2 class="font-semibold text-[#1E376E]">Filter Riwayat</h2>
   </div>
   <div class="p-5">
-    <div class="grid gap-3 md:grid-cols-4">
+    <form method="GET" action="{{ route('mahasiswa.riwayat') }}" class="grid gap-3 md:grid-cols-4">
       <div class="md:col-span-2">
         <label class="mb-1 block text-xs font-semibold text-slate-600">Status</label>
-        <select id="historyStatusFilter"
+        <select name="status"
           class="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
-          <option value="all">Semua Status</option>
-          <option value="Mengajukan">Mengajukan</option>
-          <option value="Sedang Dipinjam">Sedang Dipinjam</option>
-          <option value="Terlambat">Terlambat</option>
-          <option value="Dikembalikan">Dikembalikan</option>
-          <option value="Sudah Lunas">Sudah Lunas</option>
-          <option value="Ditolak">Ditolak</option>
-          <option value="Dibatalkan">Dibatalkan</option>
+          @php $st = (string)($filters['status'] ?? 'all'); @endphp
+          <option value="all" @selected($st==='all')>Semua Status</option>
+          <option value="Mengajukan" @selected($st==='Mengajukan')>Mengajukan</option>
+          <option value="Sedang Dipinjam" @selected($st==='Sedang Dipinjam')>Sedang Dipinjam</option>
+          <option value="Terlambat" @selected($st==='Terlambat')>Terlambat</option>
+          <option value="Dikembalikan" @selected($st==='Dikembalikan')>Dikembalikan</option>
+          <option value="Sudah Lunas" @selected($st==='Sudah Lunas')>Sudah Lunas</option>
+          <option value="Ditolak" @selected($st==='Ditolak')>Ditolak</option>
+          <option value="Dibatalkan" @selected($st==='Dibatalkan')>Dibatalkan</option>
         </select>
       </div>
       <div class="md:col-span-2">
         <label class="mb-1 block text-xs font-semibold text-slate-600">Pencarian</label>
         <div class="relative">
           <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input id="historySearch" type="search" placeholder="Cari judul, pengarang, atau kode buku..."
+          <input name="q" value="{{ $filters['q'] ?? '' }}" type="search" placeholder="Cari judul, pengarang, atau kode buku..."
             class="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
         </div>
       </div>
       <div class="flex gap-2 md:col-span-4">
-        <button type="button" id="historyFilterReset"
+        <a href="{{ route('mahasiswa.riwayat') }}"
           class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
           Reset
-        </button>
-        <button type="button" id="historyFilterApply"
+        </a>
+        <button type="submit"
           class="inline-flex items-center gap-1.5 rounded-xl bg-[#1E376E] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#162d5c]">
           <i class="bi bi-funnel-fill text-xs"></i> Tampilkan
         </button>
       </div>
-    </div>
+    </form>
   </div>
 </div>
 
@@ -109,7 +119,7 @@
       <i class="bi bi-journal-text text-[#1E376E] text-lg"></i>
       <h3 class="font-semibold text-[#1E376E]">Daftar Riwayat Peminjaman</h3>
     </div>
-    <span id="historyCount" class="text-xs font-medium text-slate-500"></span>
+    <span class="text-xs font-medium text-slate-500">{{ (int)($meta['total'] ?? 0) }} transaksi</span>
   </div>
 
   <div class="overflow-x-auto">
@@ -125,12 +135,86 @@
           <th class="px-3 py-2 min-w-[88px] text-center">Aksi</th>
         </tr>
       </thead>
-      <tbody id="historyTableBody" class="divide-y divide-slate-100"></tbody>
+      <tbody class="divide-y divide-slate-100">
+        @foreach(($rows ?? []) as $row)
+          @php
+            $status = (string)($row['status'] ?? '');
+            $canCancel = $status === 'Mengajukan';
+            $isLate = $status === 'Terlambat';
+          @endphp
+          <tr class="group hover:bg-slate-50/80 transition-colors">
+            <td class="px-3 py-2.5 align-middle">
+              <img src="{{ $row['cover'] ?? '' }}" alt="{{ $row['bookTitle'] ?? '' }}"
+                class="w-14 h-[72px] object-cover rounded-lg border border-slate-200 shadow-sm">
+            </td>
+            <td class="px-3 py-2.5 align-middle">
+              <p class="font-semibold text-slate-800 leading-tight">{{ $row['bookTitle'] ?? '' }}</p>
+              <p class="text-xs text-slate-500">{{ $row['bookAuthor'] ?? '' }} · <span class="text-[#1E376E] font-medium">{{ $row['bookCode'] ?? '' }}</span></p>
+              <p class="text-[11px] text-slate-400 mt-0.5"><i class="bi bi-clock"></i> {{ $row['submittedAt'] ?? '' }}</p>
+            </td>
+            <td class="px-3 py-2.5 align-middle text-slate-700 whitespace-nowrap text-xs">
+              {{ $status === 'Mengajukan' ? 'Menunggu' : ($row['borrowAt'] ?? '—') }}
+            </td>
+            <td class="px-3 py-2.5 align-middle text-xs text-slate-700 whitespace-nowrap">
+              {{ $row['dueAt'] ?? '—' }}
+              @if($isLate && ($row['telat'] ?? '') !== '')
+                <p class="text-[11px] font-medium text-red-500">Telat {{ $row['telat'] }}</p>
+              @elseif(($row['dueNote'] ?? '') !== '' && !in_array($status, ['Ditolak','Dibatalkan'], true))
+                <p class="text-[11px] font-medium text-emerald-600">{{ $row['dueNote'] }}</p>
+              @endif
+            </td>
+            <td class="px-3 py-2.5 align-middle text-center">
+              <span class="inline-flex items-center gap-1 rounded-md bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-700 whitespace-nowrap">
+                {{ $status ?: '—' }}
+              </span>
+            </td>
+            <td class="px-3 py-2.5 align-middle whitespace-nowrap text-xs font-semibold {{ $isLate ? 'text-red-600' : 'text-emerald-600' }}">
+              {{ ($row['denda'] ?? '') === '' ? '—' : $row['denda'] }}
+            </td>
+            <td class="px-3 py-2.5 align-middle text-center">
+              <div class="flex items-center justify-center gap-1.5">
+                <button type="button" class="js-history-detail inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#1E376E] to-teal-600 text-white shadow-sm hover:brightness-110 transition"
+                  data-row='@json($row)'>
+                  <i class="bi bi-eye text-sm"></i>
+                </button>
+                @if($canCancel)
+                  <form method="POST" action="{{ route('mahasiswa.peminjaman.cancel', ['id' => $row['id'] ?? 0]) }}"
+                    onsubmit="return confirm('Batalkan pengajuan peminjaman ini?');">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:bg-rose-100">
+                      <i class="bi bi-x-circle text-sm"></i>
+                    </button>
+                  </form>
+                @endif
+              </div>
+            </td>
+          </tr>
+        @endforeach
+      </tbody>
     </table>
-    <p id="historyEmpty" class="hidden px-5 py-12 text-center text-sm text-slate-500">
+    <p id="historyEmpty" class="{{ empty($rows) ? '' : 'hidden' }} px-5 py-12 text-center text-sm text-slate-500">
       <i class="bi bi-journal-x mb-2 block text-3xl text-slate-300"></i>
       Belum ada riwayat peminjaman.
     </p>
+  </div>
+  <div class="border-t border-slate-100 px-5 py-4">
+    @php
+      $current = (int)($meta['current_page'] ?? 1);
+      $last = (int)($meta['last_page'] ?? 1);
+    @endphp
+    @if($last > 1)
+      <div class="flex items-center justify-center gap-1 text-sm">
+        <div class="inline-flex overflow-hidden rounded-lg border border-slate-200">
+          @for($p = 1; $p <= $last; $p++)
+            <a href="{{ route('mahasiswa.riwayat', array_merge(request()->query(), ['page' => $p])) }}"
+              class="border-r border-slate-200 px-4 py-1.5 text-xs {{ $p === $current ? 'bg-[#1E376E] text-white' : 'bg-white text-slate-700 hover:bg-slate-50' }}">
+              {{ $p }}
+            </a>
+          @endfor
+        </div>
+      </div>
+    @endif
   </div>
 </div>
 
@@ -226,71 +310,76 @@
   </div>
 </div>
 
-<!-- TOAST -->
-<div id="historyToast" class="pointer-events-none fixed bottom-6 right-6 z-[70] translate-y-4 opacity-0 transition-all duration-300">
-  <div class="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg">
-    <i class="bi bi-check-circle-fill text-lg"></i>
-    <span id="historyToastText">Pengajuan berhasil dibatalkan.</span>
-  </div>
-</div>
-
 @endsection
 
 @push('scripts')
 <script>
-const historyRows = [
-  {
-    id: 'h1',
-    bookTitle: 'Tentang Kamu',
-    bookAuthor: 'Tere Liye',
-    bookCode: 'BPKSJ123',
-    category: 'Fiksi',
-    publisher: 'Republika Penerbit',
-    yearPublished: '24/Oktober/2016',
-    cover: 'https://m.media-amazon.com/images/I/81af+MCATTL.jpg',
-    submittedAt: '23/03/2026 16:03',
-    borrowIso: '2026-03-23',
-    dueIso: '2026-03-30',
-    dueNote: '',
-    telat: '1 hari',
-    denda: 'Rp4.000',
-    status: 'Terlambat',
-  },
-  {
-    id: 'h2',
-    bookTitle: 'Tentang Kamu',
-    bookAuthor: 'Tere Liye',
-    bookCode: 'BPKSJ124',
-    category: 'Fiksi',
-    publisher: 'Republika Penerbit',
-    yearPublished: '24/Oktober/2016',
-    cover: 'https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg',
-    submittedAt: '23/03/2026 16:03',
-    borrowIso: '2026-03-23',
-    dueIso: '2026-03-30',
-    dueNote: '1 hari lagi',
-    telat: '',
-    denda: 'Rp0',
-    status: 'Sedang Dipinjam',
-  },
-  {
-    id: 'h3',
-    bookTitle: 'Tentang Kamu',
-    bookAuthor: 'Tere Liye',
-    bookCode: 'BPKSJ124',
-    category: 'Fiksi',
-    publisher: 'Republika Penerbit',
-    yearPublished: '24/Oktober/2016',
-    cover: 'https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg',
-    submittedAt: '23/03/2026 16:03',
-    borrowIso: '2026-03-23',
-    dueIso: '2026-03-30',
-    dueNote: '',
-    telat: '',
-    denda: '—',
-    status: 'Mengajukan',
-  },
-];
+// Server-rendered page: keep only modal interaction.
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.js-history-detail');
+  if (!btn) return;
+  const raw = btn.getAttribute('data-row') || 'null';
+  const row = JSON.parse(raw);
+  if (!row) return;
+
+  document.getElementById('modalBookCode').value = row.bookCode || '—';
+  document.getElementById('modalBookTitle').value = row.bookTitle || '—';
+  document.getElementById('modalPublisher').value = row.bookPublisher || row.publisher || '—';
+  document.getElementById('modalAuthor').value = row.bookAuthor || '—';
+  document.getElementById('modalCategory').value = row.bookCategory || row.category || '—';
+  document.getElementById('modalYearPublished').value = row.bookYear || row.yearPublished || '—';
+  document.getElementById('modalBorrowDate').value = row.borrowAt || '—';
+  document.getElementById('modalDueDate').value = row.dueAt || '—';
+  document.getElementById('modalTelat').value = row.telat || '—';
+  document.getElementById('modalDenda').value = row.denda || '—';
+  document.getElementById('modalStatusBadge').textContent = row.status || '—';
+  const cover = document.getElementById('modalCover');
+  cover.src = row.cover || '';
+  cover.alt = row.bookTitle || '';
+
+  fbShow('detailModal');
+});
+let historyRows = [];
+const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+const historyListUrl = @json(route('mahasiswa.peminjaman.list'));
+const historyCancelUrl = (id) => @json(url('/mahasiswa/peminjaman')) + '/' + id + '/batal';
+const ROWS_PER_PAGE = 10;
+let currentPage = 1;
+let lastPage = 1;
+let totalRows = 0;
+let currentFilters = { q: '', status: 'all' };
+
+async function apiJson(url, options = {}) {
+  const res = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.headers || {}),
+    },
+    credentials: 'same-origin',
+    ...options,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Permintaan gagal.');
+  return data;
+}
+
+async function loadHistory() {
+  const params = new URLSearchParams();
+  if (currentFilters.q) params.set('q', currentFilters.q);
+  if (currentFilters.status && currentFilters.status !== 'all') params.set('status', currentFilters.status);
+  params.set('page', String(currentPage));
+  params.set('per_page', String(ROWS_PER_PAGE));
+
+  const json = await apiJson(`${historyListUrl}?${params.toString()}`);
+  historyRows = json.data || [];
+  const meta = json.meta || {};
+  lastPage = Number(meta.last_page || 1) || 1;
+  totalRows = Number(meta.total || 0) || 0;
+  updateStatsFromServer(json.stats || {});
+  render();
+}
 
 let pendingCancelId = null;
 let viewingDetailId = null;
@@ -303,6 +392,7 @@ const cancelConfirmModal = document.getElementById('cancelConfirmModal');
 const statusFilterEl = document.getElementById('historyStatusFilter');
 const searchEl = document.getElementById('historySearch');
 const countEl = document.getElementById('historyCount');
+const paginationEl = document.getElementById('paginationContainer');
 
 const INACTIVE_STATUSES = ['Ditolak', 'Dibatalkan'];
 const NO_DENDA_STATUSES = ['Mengajukan', 'Ditolak', 'Dibatalkan'];
@@ -409,15 +499,23 @@ function rowClass(row) {
   return 'group hover:bg-slate-50/80 transition-colors';
 }
 
-function getFilteredRows() {
-  const status = statusFilterEl.value;
-  const kw = (searchEl.value || '').toLowerCase().trim();
-  return historyRows.filter((row) => {
-    const matchStatus = status === 'all' || row.status === status;
-    const haystack = `${row.bookTitle} ${row.bookAuthor} ${row.bookCode} ${row.category}`.toLowerCase();
-    const matchKw = !kw || haystack.includes(kw);
-    return matchStatus && matchKw;
-  });
+function updateStatsFromServer(stats) {
+  const activeTotal = Number(stats?.active_total || 0) || 0;
+  const selesai = Number(stats?.selesai || 0) || 0;
+  const terlambat = Number(stats?.terlambat || 0) || 0;
+  const totalDenda = Number(stats?.total_denda || 0) || 0;
+
+  const pct = (n) => (activeTotal ? ((n / activeTotal) * 100).toFixed(1).replace('.0', '') : '0');
+
+  document.getElementById('statTotal').textContent = activeTotal;
+  document.getElementById('statSelesai').textContent = selesai;
+  document.getElementById('statSelesaiPct').textContent = `${pct(selesai)}% dari total aktif`;
+  document.getElementById('statTerlambat').textContent = terlambat;
+  document.getElementById('statTerlambatPct').textContent = `${pct(terlambat)}% dari total aktif`;
+  document.getElementById('statDenda').textContent = formatRp(totalDenda);
+  document.getElementById('statDendaNoteText').textContent = terlambat
+    ? `${terlambat} pinjaman terlambat`
+    : 'Tidak ada denda';
 }
 
 function actionCell(row) {
@@ -459,49 +557,57 @@ function rowHtml(row) {
     </tr>`;
 }
 
-function updateStats() {
-  const active = historyRows.filter((r) => !INACTIVE_STATUSES.includes(r.status));
-  const total = active.length;
-  const selesai = historyRows.filter((r) => r.status === 'Dikembalikan' || r.status === 'Sudah Lunas').length;
-  const terlambat = historyRows.filter((r) => r.status === 'Terlambat').length;
-  const totalDenda = historyRows.reduce((sum, r) => {
-    if (r.status === 'Terlambat' || (r.status === 'Dikembalikan' && parseDendaAmount(r.denda) > 0)) {
-      return sum + parseDendaAmount(r.denda);
+function renderPagination() {
+  if (!paginationEl) return;
+  paginationEl.innerHTML = '';
+  if (lastPage <= 1) return;
+
+  const addBtn = (label, page, active, disabled) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.disabled = disabled;
+    btn.className = `min-w-[2rem] rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${active ? 'bg-[#1E376E] text-white' : disabled ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`;
+    if (!disabled && page) btn.addEventListener('click', () => { currentPage = page; loadHistory().catch((e) => alert(e.message)); });
+    paginationEl.appendChild(btn);
+  };
+
+  addBtn('‹', currentPage - 1, false, currentPage <= 1);
+  for (let p = 1; p <= lastPage; p++) {
+    if (lastPage > 7 && p > 2 && p < lastPage - 1 && Math.abs(p - currentPage) > 1) {
+      if (p === 3 || p === lastPage - 2) {
+        const span = document.createElement('span');
+        span.className = 'px-1 text-slate-400';
+        span.textContent = '…';
+        paginationEl.appendChild(span);
+      }
+      continue;
     }
-    return sum;
-  }, 0);
-
-  const pct = (n) => (total ? ((n / total) * 100).toFixed(1).replace('.0', '') : '0');
-
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statSelesai').textContent = selesai;
-  document.getElementById('statSelesaiPct').textContent = `${pct(selesai)}% dari total aktif`;
-  document.getElementById('statTerlambat').textContent = terlambat;
-  document.getElementById('statTerlambatPct').textContent = `${pct(terlambat)}% dari total aktif`;
-  document.getElementById('statDenda').textContent = formatRp(totalDenda);
-  document.getElementById('statDendaNoteText').textContent = terlambat
-    ? `${terlambat} pinjaman terlambat`
-    : 'Tidak ada denda';
+    addBtn(String(p), p, p === currentPage, false);
+  }
+  addBtn('›', currentPage + 1, false, currentPage >= lastPage);
 }
 
 function render() {
-  const visible = getFilteredRows();
-  tbody.innerHTML = visible.map((r) => rowHtml(r)).join('');
-  const hasAny = historyRows.length > 0;
-  const hasVisible = visible.length > 0;
+  tbody.innerHTML = historyRows.map((r) => rowHtml(r)).join('');
+  const hasAny = totalRows > 0;
+  const hasVisible = historyRows.length > 0;
   emptyMsg.classList.toggle('hidden', hasVisible);
+
   if (countEl) {
     countEl.textContent = hasAny
-      ? `Menampilkan ${visible.length} dari ${historyRows.length} transaksi`
+      ? `Menampilkan ${historyRows.length} dari ${totalRows} transaksi`
       : '';
   }
+
   if (!hasVisible && hasAny) {
     emptyMsg.innerHTML = '<i class="bi bi-funnel mb-2 block text-3xl text-slate-300"></i>Tidak ada data sesuai filter.';
     emptyMsg.classList.remove('hidden');
   } else if (!hasAny) {
     emptyMsg.innerHTML = '<i class="bi bi-journal-x mb-2 block text-3xl text-slate-300"></i>Belum ada riwayat peminjaman.';
   }
-  updateStats();
+
+  renderPagination();
 }
 
 function openDetailModal(id) {
@@ -559,17 +665,18 @@ function closeCancelConfirm() {
   cancelConfirmModal.setAttribute('aria-hidden', 'true');
 }
 
-function cancelApplication(id) {
+async function cancelApplication(id) {
   const row = historyRows.find((r) => r.id === id);
   if (!row || row.status !== 'Mengajukan') return;
-  row.status = 'Dibatalkan';
-  row.denda = '—';
-  row.dueNote = '';
-  row.telat = '';
-  closeCancelConfirm();
-  if (viewingDetailId === id) closeDetailModal();
-  render();
-  showToast('Pengajuan peminjaman berhasil dibatalkan.');
+  try {
+    await apiJson(historyCancelUrl(id), { method: 'PATCH' });
+    closeCancelConfirm();
+    if (viewingDetailId === id) closeDetailModal();
+    await loadHistory();
+    showToast('Pengajuan peminjaman berhasil dibatalkan.');
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 function showToast(message) {
@@ -611,16 +718,36 @@ document.addEventListener('keydown', (e) => {
   else if (!detailModal.classList.contains('hidden')) closeDetailModal();
 });
 
-document.getElementById('historyFilterApply').addEventListener('click', render);
-document.getElementById('historyFilterReset').addEventListener('click', () => {
-  statusFilterEl.value = 'all';
-  searchEl.value = '';
-  render();
-});
-searchEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') render();
-});
+const applyBtn = document.getElementById('historyFilterApply');
+if (applyBtn && statusFilterEl && searchEl) {
+  applyBtn.addEventListener('click', () => {
+    currentFilters = { q: (searchEl.value || '').trim(), status: statusFilterEl.value || 'all' };
+    currentPage = 1;
+    loadHistory().catch((e) => alert(e.message));
+  });
+}
 
-render();
+const resetBtn = document.getElementById('historyFilterReset');
+if (resetBtn && statusFilterEl && searchEl) {
+  resetBtn.addEventListener('click', () => {
+    statusFilterEl.value = 'all';
+    searchEl.value = '';
+    currentFilters = { q: '', status: 'all' };
+    currentPage = 1;
+    loadHistory().catch((e) => alert(e.message));
+  });
+}
+
+if (searchEl && statusFilterEl) {
+  searchEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      currentFilters = { q: (searchEl.value || '').trim(), status: statusFilterEl.value || 'all' };
+      currentPage = 1;
+      loadHistory().catch((e) => alert(e.message));
+    }
+  });
+}
+
+// Server-rendered mode: no automatic fetch.
 </script>
 @endpush

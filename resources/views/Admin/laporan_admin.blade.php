@@ -36,7 +36,7 @@
       </div>
       <div class="min-w-0">
         <p class="text-sm text-slate-500">Total Peminjaman</p>
-        <p id="statTotal" class="text-2xl font-bold text-slate-800">0</p>
+        <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['total'] ?? 0) }}</p>
         <p class="mt-0.5 text-xs text-emerald-600 flex items-center gap-0.5">
           <i class="bi bi-arrow-up-short text-base"></i> <span id="statTotalTrend">—</span>
         </p>
@@ -48,8 +48,13 @@
       </div>
       <div class="min-w-0">
         <p class="text-sm text-slate-500">Selesai</p>
-        <p id="statSelesai" class="text-2xl font-bold text-slate-800">0</p>
-        <p id="statSelesaiPct" class="mt-0.5 text-xs text-slate-500">0% dari total</p>
+        <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['selesai'] ?? 0) }}</p>
+        @php
+          $total = max(0, (int)($stats['total'] ?? 0));
+          $selesai = max(0, (int)($stats['selesai'] ?? 0));
+          $selesaiPct = $total ? round(($selesai / $total) * 100, 1) : 0;
+        @endphp
+        <p class="mt-0.5 text-xs text-slate-500">{{ rtrim(rtrim((string)$selesaiPct, '0'), '.') }}% dari total</p>
       </div>
     </div>
     <div class="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
@@ -58,8 +63,12 @@
       </div>
       <div class="min-w-0">
         <p class="text-sm text-slate-500">Terlambat</p>
-        <p id="statTerlambat" class="text-2xl font-bold text-slate-800">0</p>
-        <p id="statTerlambatPct" class="mt-0.5 text-xs text-slate-500">0% dari total</p>
+        <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['terlambat'] ?? 0) }}</p>
+        @php
+          $terlambat = max(0, (int)($stats['terlambat'] ?? 0));
+          $terlambatPct = $total ? round(($terlambat / $total) * 100, 1) : 0;
+        @endphp
+        <p class="mt-0.5 text-xs text-slate-500">{{ rtrim(rtrim((string)$terlambatPct, '0'), '.') }}% dari total</p>
       </div>
     </div>
     <div class="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
@@ -68,9 +77,9 @@
       </div>
       <div class="min-w-0">
         <p class="text-sm text-slate-500">Total Denda</p>
-        <p id="statDenda" class="text-2xl font-bold text-slate-800">Rp0</p>
+        <p class="text-2xl font-bold text-slate-800">Rp{{ number_format((int)($stats['total_denda'] ?? 0), 0, ',', '.') }}</p>
         <p class="mt-0.5 text-xs text-rose-500 flex items-center gap-0.5">
-          <i class="bi bi-exclamation-circle"></i> <span id="statDendaNote">—</span>
+          <i class="bi bi-exclamation-circle"></i> <span>{{ ((int)($stats['terlambat'] ?? 0)) ? ((int)($stats['terlambat'] ?? 0)).' pinjaman terlambat' : 'Tidak ada denda' }}</span>
         </p>
       </div>
     </div>
@@ -82,12 +91,12 @@
       <i class="bi bi-funnel text-[#1E376E]"></i>
       <h3 class="font-semibold text-[#1E376E]">Filter Laporan</h3>
     </div>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
+    <form method="GET" action="{{ route('admin.laporan') }}" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
       <div class="md:col-span-2">
         <label class="mb-1 block text-xs font-semibold text-slate-600">Tanggal Mulai</label>
         <div class="relative">
           <i class="bi bi-calendar3 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-          <input id="dateStart" type="date"
+          <input name="start" value="{{ $filters['start'] ?? '' }}" type="date"
             class="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
         </div>
       </div>
@@ -95,43 +104,44 @@
         <label class="mb-1 block text-xs font-semibold text-slate-600">Tanggal Selesai</label>
         <div class="relative">
           <i class="bi bi-calendar3 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-          <input id="dateEnd" type="date"
+          <input name="end" value="{{ $filters['end'] ?? '' }}" type="date"
             class="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
         </div>
       </div>
       <div class="md:col-span-2">
         <label class="mb-1 block text-xs font-semibold text-slate-600">Status</label>
-        <select id="reportStatus"
+        @php $st = (string)($filters['status'] ?? 'all'); @endphp
+        <select name="status"
           class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
-          <option value="all">Semua Status</option>
-          <option value="Mengajukan">Mengajukan</option>
-          <option value="Sedang Dipinjam">Sedang Dipinjam</option>
-          <option value="Terlambat">Terlambat</option>
-          <option value="Dikembalikan">Dikembalikan</option>
-          <option value="Sudah Lunas">Sudah Lunas</option>
-          <option value="Ditolak">Ditolak</option>
-          <option value="Dibatalkan">Dibatalkan</option>
+          <option value="all" @selected($st==='all')>Semua Status</option>
+          <option value="Mengajukan" @selected($st==='Mengajukan')>Mengajukan</option>
+          <option value="Sedang Dipinjam" @selected($st==='Sedang Dipinjam')>Sedang Dipinjam</option>
+          <option value="Terlambat" @selected($st==='Terlambat')>Terlambat</option>
+          <option value="Dikembalikan" @selected($st==='Dikembalikan')>Dikembalikan</option>
+          <option value="Sudah Lunas" @selected($st==='Sudah Lunas')>Sudah Lunas</option>
+          <option value="Ditolak" @selected($st==='Ditolak')>Ditolak</option>
+          <option value="Dibatalkan" @selected($st==='Dibatalkan')>Dibatalkan</option>
         </select>
       </div>
       <div class="md:col-span-4">
         <label class="mb-1 block text-xs font-semibold text-slate-600">Pencarian</label>
         <div class="relative">
           <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input id="reportSearch" type="search" placeholder="Cari buku atau nama anggota..."
+          <input name="q" value="{{ $filters['q'] ?? '' }}" type="search" placeholder="Cari buku atau nama anggota..."
             class="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-4 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
         </div>
       </div>
       <div class="flex gap-2 md:col-span-2">
-        <button type="button" id="btnResetFilter"
+        <a href="{{ route('admin.laporan') }}"
           class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
           Reset
-        </button>
-        <button type="button" id="btnApplyFilter"
+        </a>
+        <button type="submit"
           class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#1E376E] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#162d5c] transition">
           <i class="bi bi-funnel-fill text-xs"></i> Tampilkan
         </button>
       </div>
-    </div>
+    </form>
   </div>
 
   {{-- Konten utama: tabel + sidebar --}}
@@ -156,16 +166,54 @@
                 <th class="px-3 py-3 text-center w-12">Aksi</th>
               </tr>
             </thead>
-            <tbody id="reportTableBody" class="divide-y divide-slate-100"></tbody>
+            <tbody class="divide-y divide-slate-100">
+              @foreach(($rows ?? []) as $i => $row)
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="px-3 py-2.5 text-slate-500 text-xs">{{ (($meta['current_page'] ?? 1) - 1) * ($meta['per_page'] ?? 5) + $i + 1 }}</td>
+                  <td class="px-3 py-2.5">
+                    <span class="font-medium text-slate-800 text-xs">{{ $row['member'] ?? '' }}</span>
+                  </td>
+                  <td class="px-3 py-2.5">
+                    <p class="font-medium text-slate-800 text-xs leading-tight">{{ $row['bookTitle'] ?? '' }}</p>
+                    <p class="text-[11px] text-slate-500">{{ $row['bookAuthor'] ?? '' }}</p>
+                  </td>
+                  <td class="px-3 py-2.5 text-xs text-slate-700 whitespace-nowrap">{{ $row['borrowAt'] ?? '—' }}</td>
+                  <td class="px-3 py-2.5 text-xs text-slate-700 whitespace-nowrap">{{ $row['dueAt'] ?? '—' }}</td>
+                  <td class="px-3 py-2.5 text-center text-xs">{{ $row['status'] ?? '—' }}</td>
+                  <td class="px-3 py-2.5 text-xs">{{ $row['denda'] ?? '—' }}</td>
+                  <td class="px-3 py-2.5 text-center text-xs">
+                    <button type="button" class="js-report-detail inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#1E376E] to-teal-600 text-white shadow-sm hover:brightness-110 transition"
+                      data-row='@json($row)'>
+                      <i class="bi bi-eye text-sm"></i>
+                    </button>
+                  </td>
+                </tr>
+              @endforeach
+            </tbody>
           </table>
         </div>
-        <p id="reportEmpty" class="hidden px-5 py-10 text-center text-sm text-slate-500">
+        <p id="reportEmpty" class="{{ empty($rows) ? '' : 'hidden' }} px-5 py-10 text-center text-sm text-slate-500">
           <i class="bi bi-journal-x mb-2 block text-3xl text-slate-300"></i>
           Tidak ada data yang cocok dengan filter.
         </p>
         <div class="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <p id="paginationInfo" class="text-xs text-slate-500">Menampilkan 0 dari 0 data</p>
-          <div id="paginationContainer" class="flex flex-wrap items-center justify-center gap-1 text-sm"></div>
+          <p class="text-xs text-slate-500">Menampilkan {{ count($rows ?? []) }} dari {{ (int)($meta['total'] ?? 0) }} data</p>
+          @php
+            $current = (int)($meta['current_page'] ?? 1);
+            $last = (int)($meta['last_page'] ?? 1);
+          @endphp
+          @if($last > 1)
+            <div class="flex flex-wrap items-center justify-center gap-1 text-sm">
+              <div class="inline-flex overflow-hidden rounded-lg border border-slate-200">
+                @for($p = 1; $p <= $last; $p++)
+                  <a href="{{ route('admin.laporan', array_merge(request()->query(), ['page' => $p])) }}"
+                    class="border-r border-slate-200 px-4 py-1.5 text-xs {{ $p === $current ? 'bg-[#1E376E] text-white' : 'bg-white text-slate-700 hover:bg-slate-50' }}">
+                    {{ $p }}
+                  </a>
+                @endfor
+              </div>
+            </div>
+          @endif
         </div>
       </div>
     </div>
@@ -247,11 +295,14 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
+/* server-rendered: disable old AJAX/chart script
 const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 const ROWS_PER_PAGE = 5;
 let currentPage = 1;
-let filteredRows = [];
 let summaryChartInstance = null;
+let lastPage = 1;
+let totalRows = 0;
+let currentFilters = { q: '', status: 'all', start: '', end: '' };
 
 function formatDisplayDate(iso) {
   if (!iso) return '';
@@ -269,17 +320,7 @@ function formatRp(n) {
   return 'Rp' + n.toLocaleString('id-ID');
 }
 
-const reportRows = [
-  { id: 'r1', member: 'Luthfi Dwi Apriyaldi', bookCode: 'BPKSJ123', bookTitle: 'Tentang Kamu', bookAuthor: 'Tere Liye', category: 'Fiksi', borrowIso: '2026-03-23', dueIso: '2026-03-30', telat: '2 hari', denda: 'Rp4.000', telatNote: 'Telat 2 hari', status: 'Terlambat', cover: 'https://m.media-amazon.com/images/I/81af+MCATTL.jpg' },
-  { id: 'r2', member: 'Muhammad Zaky Sadewa', bookCode: 'BPKSJ124', bookTitle: 'Atomic Habits', bookAuthor: 'James Clear', category: 'Pendidikan', borrowIso: '2026-03-21', dueIso: '2026-03-28', telat: '', denda: 'Rp0', status: 'Sudah Lunas', cover: 'https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg' },
-  { id: 'r3', member: 'Nadia Rahma', bookCode: 'BPKSJ126', bookTitle: 'Filosofi Teras', bookAuthor: 'Henry Manampiring', category: 'Pendidikan', borrowIso: '2026-03-18', dueIso: '2026-03-25', telat: '3 hari', denda: 'Rp10.000', telatNote: 'Telat 3 hari', status: 'Terlambat', cover: 'https://m.media-amazon.com/images/I/81zD9kaVW9L.jpg' },
-  { id: 'r4', member: 'Putri Ayu', bookCode: 'BPKSJ127', bookTitle: 'Bumi', bookAuthor: 'Tere Liye', category: 'Fiksi', borrowIso: '2026-03-10', dueIso: '2026-03-17', telat: '', denda: 'Rp8.000', status: 'Dikembalikan', cover: 'https://m.media-amazon.com/images/I/81l3rZK4lnL.jpg' },
-  { id: 'r5', member: 'Salsa Putri', bookCode: 'BPKSJ128', bookTitle: 'Laskar Pelangi', bookAuthor: 'Andrea Hirata', category: 'Fiksi', borrowIso: '2026-03-15', dueIso: '2026-03-22', telat: '', denda: 'Rp6.000', status: 'Terlambat', cover: 'https://images-na.ssl-images-amazon.com/images/I/81af+MCATTL.jpg' },
-  { id: 'r6', member: 'Cristh Velato Arioranga', bookCode: 'BPKSJ125', bookTitle: 'Filosofi Teras', bookAuthor: 'Henry Manampiring', category: 'Pendidikan', borrowIso: '2026-03-25', dueIso: '2026-04-01', telat: '', denda: 'Rp0', dueNote: '3 hari lagi', status: 'Sedang Dipinjam', cover: 'https://m.media-amazon.com/images/I/81zD9kaVW9L.jpg' },
-  { id: 'r7', member: 'Dewi Putri', bookCode: 'BPKSJ129', bookTitle: 'Rich Dad Poor Dad', bookAuthor: 'Robert Kiyosaki', category: 'Bisnis', borrowIso: '2026-03-28', dueIso: '2026-04-04', telat: '', denda: '—', status: 'Mengajukan', cover: 'https://m.media-amazon.com/images/I/71UwSHSZRnS.jpg' },
-  { id: 'r8', member: 'Rizky Fadillah', bookCode: 'BPKSJ130', bookTitle: 'Negeri 5 Menara', bookAuthor: 'Ahmad Fuadi', category: 'Pendidikan', borrowIso: '2026-03-20', dueIso: '2026-03-27', telat: '', denda: 'Rp0', status: 'Sudah Lunas', cover: 'https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg' },
-  { id: 'r9', member: 'Luthfi Dwi Apriyaldi', bookCode: 'BPKSJ128', bookTitle: 'Laskar Pelangi', bookAuthor: 'Andrea Hirata', category: 'Fiksi', borrowIso: '2026-03-15', dueIso: '2026-03-22', telat: '', denda: '—', status: 'Dibatalkan', cover: 'https://images-na.ssl-images-amazon.com/images/I/81af+MCATTL.jpg' },
-];
+let reportRows = [];
 
 let currentDetailRow = null;
 
@@ -355,38 +396,20 @@ function rowHtml(row, index) {
     </tr>`;
 }
 
-function getFilteredRows() {
-  const kw = (document.getElementById('reportSearch').value || '').toLowerCase().trim();
-  const st = document.getElementById('reportStatus').value;
-  const start = document.getElementById('dateStart').value;
-  const end = document.getElementById('dateEnd').value;
-  return reportRows.filter((row) => {
-    const hay = (row.bookTitle + ' ' + row.bookAuthor + ' ' + row.member).toLowerCase();
-    if (kw && !hay.includes(kw)) return false;
-    if (st !== 'all' && row.status !== st) return false;
-    if (start && row.borrowIso < start) return false;
-    if (end && row.borrowIso > end) return false;
-    return true;
-  });
-}
+function updateStats(stats) {
+  const total = Number(stats?.total || 0) || 0;
+  const selesai = Number(stats?.selesai || 0) || 0;
+  const terlambat = Number(stats?.terlambat || 0) || 0;
+  const mengajukan = Number(stats?.mengajukan || 0) || 0;
+  const sedangDipinjam = Number(stats?.sedang_dipinjam || 0) || 0;
+  const ditolak = Number(stats?.ditolak || 0) || 0;
+  const dibatalkan = Number(stats?.dibatalkan || 0) || 0;
+  const totalDenda = Number(stats?.total_denda || 0) || 0;
 
-function countByStatus(status) {
-  return reportRows.filter((r) => r.status === status).length;
-}
-
-function updateStats() {
-  const total = reportRows.length;
-  const selesai = countByStatus('Sudah Lunas') + countByStatus('Dikembalikan');
-  const terlambat = countByStatus('Terlambat');
-  const mengajukan = countByStatus('Mengajukan');
-  const sedangDipinjam = countByStatus('Sedang Dipinjam');
-  const ditolak = countByStatus('Ditolak');
-  const dibatalkan = countByStatus('Dibatalkan');
-  const totalDenda = reportRows.reduce((s, r) => s + parseDenda(r.denda), 0);
   const pct = (n) => (total ? ((n / total) * 100).toFixed(1) : '0');
   const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   set('statTotal', total);
-  set('statTotalTrend', '+12% dari bulan lalu');
+  set('statTotalTrend', 'Dari database');
   set('statSelesai', selesai);
   set('statSelesaiPct', `${pct(selesai)}% dari total`);
   set('statTerlambat', terlambat);
@@ -395,7 +418,6 @@ function updateStats() {
   set('statDendaNote', `${terlambat} pinjaman terlambat`);
   set('chartCenterTotal', total);
   updateChart({ selesai, terlambat, mengajukan, sedangDipinjam, ditolak, dibatalkan, total });
-  updateTopFines();
 }
 
 function updateChart(counts) {
@@ -438,7 +460,7 @@ function updateChart(counts) {
   }
 }
 
-function updateTopFines() {
+function updateTopFinesFromPageRows() {
   const list = document.getElementById('topFinesList');
   if (!list) return;
   const ranked = [...reportRows]
@@ -461,21 +483,19 @@ function updateTopFines() {
 }
 
 function renderPagination() {
-  const total = filteredRows.length;
-  const totalPages = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
-  if (currentPage > totalPages) currentPage = totalPages;
-  const start = (currentPage - 1) * ROWS_PER_PAGE;
-  const pageRows = filteredRows.slice(start, start + ROWS_PER_PAGE);
   const tbody = document.getElementById('reportTableBody');
   const emptyMsg = document.getElementById('reportEmpty');
   if (tbody) {
-    tbody.innerHTML = pageRows.map((r, i) => rowHtml(r, start + i + 1)).join('');
+    tbody.innerHTML = reportRows.map((r, i) => rowHtml(r, ((currentPage - 1) * ROWS_PER_PAGE) + i + 1)).join('');
   }
-  if (emptyMsg) emptyMsg.classList.toggle('hidden', total > 0);
+  if (emptyMsg) emptyMsg.classList.toggle('hidden', totalRows > 0);
   const info = document.getElementById('paginationInfo');
   if (info) {
-    if (!total) info.textContent = 'Menampilkan 0 dari 0 data';
-    else info.textContent = `Menampilkan ${start + 1} – ${Math.min(start + ROWS_PER_PAGE, total)} dari ${total} data`;
+    if (!totalRows) info.textContent = 'Menampilkan 0 dari 0 data';
+    else {
+      const start = (currentPage - 1) * ROWS_PER_PAGE;
+      info.textContent = `Menampilkan ${start + 1} – ${Math.min(start + reportRows.length, totalRows)} dari ${totalRows} data`;
+    }
   }
   const pag = document.getElementById('paginationContainer');
   if (!pag) return;
@@ -486,13 +506,13 @@ function renderPagination() {
     btn.textContent = label;
     btn.disabled = disabled;
     btn.className = `min-w-[2rem] rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${active ? 'bg-[#1E376E] text-white' : disabled ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`;
-    if (!disabled && page) btn.addEventListener('click', () => { currentPage = page; renderPagination(); });
+    if (!disabled && page) btn.addEventListener('click', () => { currentPage = page; fetchReportRows(); });
     pag.appendChild(btn);
   };
   addBtn('‹', currentPage - 1, false, currentPage <= 1);
-  for (let p = 1; p <= totalPages; p++) {
-    if (totalPages > 7 && p > 2 && p < totalPages - 1 && Math.abs(p - currentPage) > 1) {
-      if (p === 3 || p === totalPages - 2) {
+  for (let p = 1; p <= lastPage; p++) {
+    if (lastPage > 7 && p > 2 && p < lastPage - 1 && Math.abs(p - currentPage) > 1) {
+      if (p === 3 || p === lastPage - 2) {
         const span = document.createElement('span');
         span.className = 'px-1 text-slate-400';
         span.textContent = '…';
@@ -502,13 +522,7 @@ function renderPagination() {
     }
     addBtn(String(p), p, p === currentPage, false);
   }
-  addBtn('›', currentPage + 1, false, currentPage >= totalPages);
-}
-
-function applyFilters() {
-  filteredRows = getFilteredRows();
-  currentPage = 1;
-  renderPagination();
+  addBtn('›', currentPage + 1, false, currentPage >= lastPage);
 }
 
 function resetFilters() {
@@ -516,7 +530,9 @@ function resetFilters() {
   document.getElementById('reportStatus').value = 'all';
   document.getElementById('dateStart').value = '';
   document.getElementById('dateEnd').value = '';
-  applyFilters();
+  currentFilters = { q: '', status: 'all', start: '', end: '' };
+  currentPage = 1;
+  fetchReportRows();
 }
 
 function openDetail(id) {
@@ -550,7 +566,7 @@ function csvEscape(val) {
 function exportAllExcel() {
   const headers = ['No', 'Anggota', 'Buku', 'Tgl Pinjam', 'Tgl Kembali', 'Status', 'Denda'];
   const lines = [headers.join(',')];
-  filteredRows.forEach((row, i) => {
+  reportRows.forEach((row, i) => {
     lines.push([i + 1, row.member, row.bookTitle, formatDisplayDate(row.borrowIso), formatDisplayDate(row.dueIso), row.status, row.denda].map(csvEscape).join(','));
   });
   const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -561,7 +577,7 @@ function exportAllExcel() {
 }
 
 function exportAllPdf() {
-  const rowsHtml = filteredRows.map((row, i) => `<tr><td>${i+1}</td><td>${escHtml(row.member)}</td><td>${escHtml(row.bookTitle)}</td><td>${escHtml(formatDisplayDate(row.borrowIso))}</td><td>${escHtml(formatDisplayDate(row.dueIso))}</td><td>${escHtml(row.status)}</td><td>${escHtml(row.denda)}</td></tr>`).join('');
+  const rowsHtml = reportRows.map((row, i) => `<tr><td>${i+1}</td><td>${escHtml(row.member)}</td><td>${escHtml(row.bookTitle)}</td><td>${escHtml(formatDisplayDate(row.borrowIso))}</td><td>${escHtml(formatDisplayDate(row.dueIso))}</td><td>${escHtml(row.status)}</td><td>${escHtml(row.denda)}</td></tr>`).join('');
   const w = window.open('', '_blank');
   if (w) {
     w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Laporan</title><style>body{font-family:system-ui;padding:24px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e2e8f0;padding:8px;font-size:12px}th{background:#f1f5f9}</style></head><body><h1>Laporan Peminjaman</h1><table><thead><tr><th>No</th><th>Anggota</th><th>Buku</th><th>Pinjam</th><th>Kembali</th><th>Status</th><th>Denda</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`);
@@ -577,13 +593,51 @@ document.getElementById('reportTableBody').addEventListener('click', (e) => {
 });
 document.getElementById('reportDetailClose').addEventListener('click', closeDetail);
 document.getElementById('detailBtnBack').addEventListener('click', closeDetail);
-document.getElementById('btnApplyFilter').addEventListener('click', applyFilters);
+document.getElementById('btnApplyFilter').addEventListener('click', () => {
+  currentFilters = {
+    q: (document.getElementById('reportSearch').value || '').trim(),
+    status: document.getElementById('reportStatus').value || 'all',
+    start: document.getElementById('dateStart').value || '',
+    end: document.getElementById('dateEnd').value || '',
+  };
+  currentPage = 1;
+  fetchReportRows();
+});
 document.getElementById('btnResetFilter').addEventListener('click', resetFilters);
 document.getElementById('exportAllPdfBtn').addEventListener('click', exportAllPdf);
 document.getElementById('exportAllExcelBtn').addEventListener('click', exportAllExcel);
 
-filteredRows = [...reportRows];
-updateStats();
-applyFilters();
+async function fetchReportRows() {
+  const params = new URLSearchParams();
+  if (currentFilters.q) params.set('q', currentFilters.q);
+  if (currentFilters.status && currentFilters.status !== 'all') params.set('status', currentFilters.status);
+  if (currentFilters.start) params.set('start', currentFilters.start);
+  if (currentFilters.end) params.set('end', currentFilters.end);
+  params.set('page', String(currentPage));
+  params.set('per_page', String(ROWS_PER_PAGE));
+
+  const res = await fetch(`{{ route('admin.laporan.list') }}?${params.toString()}`, { headers: { Accept: "application/json" } });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(json?.message || 'Gagal memuat data laporan.');
+  }
+  reportRows = Array.isArray(json.data) ? json.data : [];
+  const meta = json.meta || {};
+  lastPage = Number(meta.last_page || 1) || 1;
+  totalRows = Number(meta.total || 0) || 0;
+  updateStats(json.stats || {});
+  updateTopFinesFromPageRows();
+  renderPagination();
+}
+
+(async function initReport() {
+  try {
+    await fetchReportRows();
+  } catch (e) {
+    reportRows = [];
+    alert(e?.message || 'Gagal memuat data laporan.');
+  }
+})();
+*/
 </script>
 @endpush

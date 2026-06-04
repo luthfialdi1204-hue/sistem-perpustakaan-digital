@@ -10,24 +10,24 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['nip' => '198501152010011001'],
+            ['nip' => 198501152010011001],
             [
-                'name' => 'Admin Perpustakaan',
+                'nama_pengguna' => 'Admin Perpustakaan',
                 'email' => 'admin@perpustakaan.test',
-                'nim' => null,
-                'role' => 'admin',
-                'password' => 'admin123',
+                'nim' => 0,
+                'role_user' => User::ROLE_ADMIN,
+                'kata_sandi' => 'admin123',
             ]
         );
 
         User::updateOrCreate(
-            ['nim' => '3312501077'],
+            ['nim' => 3312501077],
             [
-                'name' => 'Mahasiswa Demo',
+                'nama_pengguna' => 'Mahasiswa Demo',
                 'email' => 'mahasiswa@perpustakaan.test',
-                'nip' => null,
-                'role' => 'mahasiswa',
-                'password' => '3312501077',
+                'nip' => 0,
+                'role_user' => User::ROLE_MAHASISWA,
+                'kata_sandi' => '3312501077',
             ]
         );
     }

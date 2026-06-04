@@ -7,17 +7,12 @@
 
 @section('content')
 @php
-  /** @var \App\Models\User $user */
+  /** @var \App\Models\User|null $user */
   $user = auth()->user();
-  $name = $user?->name ?? '—';
+  $name = $user?->nama_pengguna ?? '—';
   $email = $user?->email ?? '—';
-  $nim = $user?->nim ?? '—';
-  $initials = collect(preg_split('/\s+/', trim((string) $name)))
-    ->filter()
-    ->take(2)
-    ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
-    ->join('');
-  $initials = $initials !== '' ? $initials : 'MH';
+  $nim = $user?->loginIdentifier() ?? '—';
+  $initials = $user?->initials() ?? 'MH';
 @endphp
 <div class="mx-auto max-w-4xl space-y-6">
 

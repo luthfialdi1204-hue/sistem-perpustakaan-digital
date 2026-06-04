@@ -32,6 +32,10 @@ class Halaman_Masuk extends Controller
 
     public function loginMahasiswa(Request $request)
     {
+        if (Auth::check()) {
+            Auth::logout();
+        }
+
         $validator = Validator::make($request->all(), [
             'nim' => ['required', 'digits_between:6,20'],
             'password' => ['required', 'string'],
@@ -45,7 +49,7 @@ class Halaman_Masuk extends Controller
             return back()->withErrors($validator, 'mahasiswa')->withInput();
         }
 
-        $user = User::where('nim', $request->nim)->first();
+        $user = User::where('nim', (int) $request->nim)->first();
 
         if (! $user || ! $this->passwordMatches($request->password, $user->password)) {
             return back()
@@ -68,6 +72,10 @@ class Halaman_Masuk extends Controller
 
     public function loginAdmin(Request $request)
     {
+        if (Auth::check()) {
+            Auth::logout();
+        }
+
         $validator = Validator::make($request->all(), [
             'nip' => ['required', 'digits_between:6,20'],
             'password' => ['required', 'string'],
@@ -81,7 +89,7 @@ class Halaman_Masuk extends Controller
             return back()->withErrors($validator, 'admin')->withInput();
         }
 
-        $user = User::where('nip', $request->nip)->first();
+        $user = User::where('nip', (int) $request->nip)->first();
 
         if (! $user || ! $this->passwordMatches($request->password, $user->password)) {
             return back()
@@ -98,7 +106,7 @@ class Halaman_Masuk extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended('/Dashboard_Admin');
+        return redirect()->intended(route('admin.dashboard'));
     }
 
     public function logout(Request $request)

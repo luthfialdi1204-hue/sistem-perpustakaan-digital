@@ -1,6 +1,9 @@
 @php
     $title = $title ?? 'Halaman Mahasiswa';
     $subtitle = $subtitle ?? '';
+    $authUser = auth()->user();
+    $displayName = $authUser?->nama_pengguna ?? 'Mahasiswa';
+    $initials = $authUser?->initials() ?? 'MH';
 @endphp
 
 <div class="mb-6 flex items-center justify-between">
@@ -17,8 +20,8 @@
   <button id="dropdownMahasiswaButton" type="button"
     data-dropdown-toggle="dropdownMahasiswa" data-dropdown-placement="bottom-end"
     class="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 shadow-sm backdrop-blur transition hover:shadow-md">
-    <span>Mahasiswa</span>
-    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand to-teal-600 text-xs font-bold text-white">NP</span>
+    <span class="max-w-[140px] truncate">{{ $displayName }}</span>
+    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand to-teal-600 text-xs font-bold text-white">{{ $initials }}</span>
     <i class="bi bi-chevron-down text-xs text-slate-400"></i>
   </button>
   <div id="dropdownMahasiswa" class="z-50 hidden w-48 divide-y divide-gray-100 rounded-xl border border-slate-200 bg-white shadow-xl">

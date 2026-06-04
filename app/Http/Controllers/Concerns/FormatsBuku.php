@@ -3,10 +3,66 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\Buku;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 
 trait FormatsBuku
 {
+    protected function callNumberColumn(): string
+    {
+        return 'nomor_panggil';
+    }
+
+    protected function bookCallNumber(Buku $b): string
+    {
+        $value = trim((string) ($b->nomor_panggil ?? ''));
+
+        return $value !== '' ? $value : (string) $b->kode_buku;
+    }
+
+    protected function callNumberAttributes(string $code): array
+    {
+        return ['nomor_panggil' => trim($code)];
+    }
+
+    protected function callNumberExists(string $code, int|string|null $exceptId = null): bool
+    {
+        if (trim($code) === '') {
+            return false;
+        }
+
+        $query = Buku::query()->where('nomor_panggil', trim($code));
+        if ($exceptId !== null) {
+            $query->where('kode_buku', '!=', (int) $exceptId);
+        }
+
+        return $query->exists();
+    }
+
+    protected function applyBukuSearch(Builder $query, Request $request): Builder
+    {
+        $term = trim((string) $request->input('q', $request->input('search', '')));
+
+        if ($term !== '') {
+            $like = '%'.$term.'%';
+            $query->where(function (Builder $q) use ($like) {
+                $q->where('judul_buku', 'like', $like)
+                    ->orWhere('pengarang', 'like', $like)
+                    ->orWhere('penerbit', 'like', $like)
+                    ->orWhere('kategori_buku', 'like', $like)
+                    ->orWhere('isbn', 'like', $like)
+                    ->orWhere('nomor_panggil', 'like', $like);
+            });
+        }
+
+        $category = trim((string) $request->input('category', ''));
+        if ($category !== '' && strtolower($category) !== 'all') {
+            $query->where('kategori_buku', $category);
+        }
+
+        return $query;
+    }
     protected function defaultCoverUrl(int $kode): string
     {
         $files = ['Cover buku 1.jpg', 'Cover buku 2.jpg', 'Cover buku 3.jpg'];
@@ -96,11 +152,12 @@ trait FormatsBuku
         $meta = $this->parseDeskripsiMeta($b->deskripsi_buku);
         $stock = (int) $b->stok_buku;
 
-        $kodeReg = trim((string) ($b->kode_registrasi ?? ''));
+        $nomorPanggil = $this->bookCallNumber($b);
 
         return [
             'id' => (int) $b->kode_buku,
-            'code' => $kodeReg !== '' ? $kodeReg : (string) $b->kode_buku,
+            'code' => $nomorPanggil,
+            'nomor_panggil' => $nomorPanggil,
             'title' => $b->judul_buku,
             'author' => $b->pengarang,
             'publisher' => $b->penerbit,
@@ -116,16 +173,9 @@ trait FormatsBuku
             'stockLabel' => $stock > 0 ? "{$stock} tersedia" : 'Dipinjam semua',
         ];
     }
-
+    
     protected function bukuCategories(): array
     {
-        return Buku::query()
-            ->select('kategori_buku')
-            ->distinct()
-            ->orderBy('kategori_buku')
-            ->pluck('kategori_buku')
-            ->filter()
-            ->values()
-            ->all();
+        return Buku::kategoriList();
     }
 }

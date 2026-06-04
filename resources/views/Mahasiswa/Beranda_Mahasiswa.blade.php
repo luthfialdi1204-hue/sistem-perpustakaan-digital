@@ -9,8 +9,13 @@
 <!-- WELCOME -->
 <div class="mb-6 rounded-2xl bg-gradient-to-br from-brand via-brand-light to-teal-600 p-6 text-white shadow-lg">
   @php
-    $userName = auth()->user()->name ?? 'Pengguna';
-    $todayId = now()->locale('id')->translatedFormat('l, d F Y');
+    $authUser = auth()->user();
+    $userName = $authUser?->nama_pengguna ?? 'Pengguna';
+    try {
+        $todayId = now()->locale('id')->translatedFormat('l, d F Y');
+    } catch (\Throwable $e) {
+        $todayId = now()->format('d/m/Y');
+    }
   @endphp
   <h2 class="mb-1 text-xl font-semibold">Selamat Datang, {{ $userName }}</h2>
   <p class="text-sm text-blue-100">{{ $todayId }}</p>
@@ -23,15 +28,33 @@
       <i class="bi bi-stars text-[#1E376E]"></i>
       <h3 class="font-semibold text-[#1E376E]">Rekomendasi Buku Untuk Anda</h3>
     </div>
-    <a href="{{ url('Katalog_Buku') }}" class="text-xs font-medium text-[#1E376E] hover:underline">
+    <a href="{{ route('mahasiswa.katalog') }}" class="text-xs font-medium text-[#1E376E] hover:underline">
       Lihat semua <i class="bi bi-arrow-right"></i>
     </a>
   </div>
 
-  <div id="rekomendasi-empty" class="hidden px-5 pb-5 text-center text-sm text-slate-500">
+  <div id="rekomendasi-empty" class="{{ empty($rows) ? '' : 'hidden' }} px-5 pb-5 text-center text-sm text-slate-500">
     Belum ada buku di koleksi perpustakaan.
   </div>
-  <div class="grid grid-cols-2 gap-4 p-5 md:grid-cols-3 xl:grid-cols-4" id="rekomendasi-container"></div>
+  <div class="grid grid-cols-2 gap-4 p-5 md:grid-cols-3 xl:grid-cols-4">
+    @foreach(($rows ?? []) as $book)
+      <div class="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+        <img src="{{ $book['img'] ?? '' }}" alt="{{ $book['title'] ?? '' }}" class="h-40 w-full rounded-lg object-cover">
+        <h6 class="mt-2 truncate font-semibold text-slate-800" title="{{ $book['title'] ?? '' }}">{{ $book['title'] ?? '' }}</h6>
+        <small class="text-slate-500">{{ $book['author'] ?? '' }}</small><br>
+        <small class="text-slate-500">{{ $book['category'] ?? '' }}</small><br>
+        <small class="text-slate-500">{{ $book['stockLabel'] ?? '' }}</small>
+        <div class="mt-2 space-y-1">
+          <button type="button" data-book='@json($book)' class="js-rekomendasi-detail w-full rounded-lg bg-[#1E376E] py-2 text-sm font-medium text-white hover:bg-[#162d5c] transition">
+            Lihat Detail
+          </button>
+          <a href="{{ route('mahasiswa.katalog') }}" class="block w-full rounded-lg bg-emerald-500 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition">
+            Pinjam Buku
+          </a>
+        </div>
+      </div>
+    @endforeach
+  </div>
 </div>
 
 <!-- MODAL DETAIL BUKU -->
@@ -46,7 +69,7 @@
       </div>
       <div class="space-y-2 text-sm text-slate-700">
         <h3 id="bookDetailTitle" class="text-lg font-bold text-slate-900"></h3>
-        <p><span class="font-semibold text-slate-600">Kode Buku:</span> <span id="bookDetailCode"></span></p>
+        <p><span class="font-semibold text-slate-600">Nomor Panggil:</span> <span id="bookDetailCode"></span></p>
         <p><span class="font-semibold text-slate-600">Pengarang:</span> <span id="bookDetailAuthor"></span></p>
         <p><span class="font-semibold text-slate-600">Penerbit:</span> <span id="bookDetailPublisher"></span></p>
         <p><span class="font-semibold text-slate-600">Tahun Terbit:</span> <span id="bookDetailYear"></span></p>
@@ -79,11 +102,6 @@
 
 @push('scripts')
 <script>
-let books = [];
-const defaultCover = "{{ asset('images/' . rawurlencode('Cover buku 1.jpg')) }}";
-
-const container = document.getElementById('rekomendasi-container');
-const emptyEl = document.getElementById('rekomendasi-empty');
 const modal = document.getElementById('bookDetailModal');
 
 function escAttr(s) {
@@ -94,7 +112,7 @@ function fillBookDetail(book) {
   document.getElementById('bookDetailImg').src = book.img;
   document.getElementById('bookDetailImg').alt = book.title;
   document.getElementById('bookDetailTitle').textContent = book.title;
-  document.getElementById('bookDetailCode').textContent = book.code;
+  document.getElementById('bookDetailCode').textContent = book.nomor_panggil || book.code || '-';
   document.getElementById('bookDetailAuthor').textContent = book.author;
   document.getElementById('bookDetailPublisher').textContent = book.publisher;
   document.getElementById('bookDetailYear').textContent = book.year;
@@ -109,68 +127,55 @@ function fillBookDetail(book) {
   stockEl.className = 'ml-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium text-white ' + stockBg;
 }
 
-function openBookDetail(bookId) {
-  const book = books.find((b) => String(b.id) === String(bookId));
+function showModal(id) {
+  if (typeof fbShow === 'function') {
+    fbShow(id);
+    return;
+  }
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('hidden');
+    el.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
+  }
+}
+
+function hideModal(id) {
+  if (typeof fbHide === 'function') {
+    fbHide(id);
+    return;
+  }
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('hidden');
+    el.classList.remove('flex');
+    document.body.classList.remove('overflow-hidden');
+  }
+}
+
+function openBookDetail(book) {
   if (!book) return;
   fillBookDetail(book);
-  fbShow('bookDetailModal');
+  showModal('bookDetailModal');
 }
 
 function closeBookDetail() {
-  fbHide('bookDetailModal');
+  hideModal('bookDetailModal');
 }
 
 window.openBookDetail = openBookDetail;
 window.closeBookDetail = closeBookDetail;
 
-function renderRekomendasi(list) {
-  container.innerHTML = '';
-  if (emptyEl) emptyEl.classList.toggle('hidden', list.length > 0);
-
-  list.forEach((book) => {
-    const stockText = book.available ? `Tersedia: ${book.stock}` : book.stockLabel;
-    const pinjamBtn = book.available
-      ? `<a href="{{ url('Katalog_Buku') }}" class="block w-full rounded-lg bg-emerald-500 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition">Pinjam Buku</a>`
-      : `<span class="block w-full rounded-lg bg-amber-200 py-2 text-sm font-medium text-amber-900">Sedang Dipinjam</span>`;
-
-    container.innerHTML += `
-      <div class="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-        <img src="${escAttr(book.img)}" alt="${escAttr(book.title)}" onerror="this.onerror=null;this.src=defaultCover;" class="h-40 w-full rounded-lg object-cover">
-        <h6 class="mt-2 truncate font-semibold text-slate-800" title="${escAttr(book.title)}">${escAttr(book.title)}</h6>
-        <small class="text-slate-500">${escAttr(book.author)}</small><br>
-        <small class="text-slate-500">${escAttr(book.category)}</small><br>
-        <small class="text-slate-500">${escAttr(stockText)}</small>
-        <div class="mt-2 space-y-1">
-          <button type="button" data-book-id="${escAttr(book.id)}" class="js-rekomendasi-detail w-full rounded-lg bg-[#1E376E] py-2 text-sm font-medium text-white hover:bg-[#162d5c] transition">
-            Lihat Detail
-          </button>
-          ${pinjamBtn}
-        </div>
-      </div>
-    `;
-  });
-}
-
-async function fetchRekomendasi() {
-  const res = await fetch("{{ route('mahasiswa.buku.list') }}?limit=8&random=1", {
-    headers: { Accept: 'application/json' },
-  });
-  const json = await res.json();
-  books = json.data || [];
-  renderRekomendasi(books);
-}
-
-container.addEventListener('click', (e) => {
+document.addEventListener('click', (e) => {
   const btn = e.target.closest('.js-rekomendasi-detail');
   if (!btn) return;
-  const id = btn.getAttribute('data-book-id');
-  if (id) openBookDetail(id);
+  const raw = btn.getAttribute('data-book') || 'null';
+  const book = JSON.parse(raw);
+  if (book) openBookDetail(book);
 });
 
 modal.addEventListener('click', (e) => {
   if (e.target === modal) closeBookDetail();
 });
-
-fetchRekomendasi();
 </script>
 @endpush

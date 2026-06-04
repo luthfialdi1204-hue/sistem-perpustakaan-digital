@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title', 'Halaman Mahasiswa')</title>
 <script src="https://cdn.tailwindcss.com"></script>
 @include('partials.head-theme')
@@ -16,6 +17,22 @@
       'title' => trim($__env->yieldContent('page_title')) ?: 'Halaman Mahasiswa',
       'subtitle' => trim($__env->yieldContent('page_subtitle')),
   ])
+  @if(session('success'))
+    <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800 shadow-sm">
+      <div class="flex items-start gap-3">
+        <i class="bi bi-check-circle-fill mt-0.5 text-lg"></i>
+        <div class="text-sm font-medium">{{ session('success') }}</div>
+      </div>
+    </div>
+  @endif
+  @if(session('error'))
+    <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800 shadow-sm">
+      <div class="flex items-start gap-3">
+        <i class="bi bi-exclamation-triangle-fill mt-0.5 text-lg"></i>
+        <div class="text-sm font-medium">{{ session('error') }}</div>
+      </div>
+    </div>
+  @endif
   @yield('content')
   @include('components.mahasiswa.footer')
 </div>

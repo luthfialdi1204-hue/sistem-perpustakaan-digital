@@ -14,38 +14,31 @@ class User extends Authenticatable
 
     public const ROLE_ADMIN = 'admin';
 
-    /**
-     * Aplikasi ini memakai tabel `user` (legacy), bukan `users`.
-     */
     protected $table = 'user';
 
     protected $primaryKey = 'id_user';
 
+    protected $keyType = 'int';
+
+    public $incrementing = true;
+
     public $timestamps = false;
 
-    /**
-     * Karena tabel `user` memakai kolom legacy (nama_pengguna, kata_sandi, role_user)
-     * dan proses CRUD admin memakai mass-assignment, kita buka guarded agar kolom
-     * tersebut bisa tersimpan.
-     */
     protected $guarded = [];
 
     protected $hidden = [
-        'password',
         'kata_sandi',
-        'remember_token',
     ];
 
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            'id_user' => 'integer',
+            'nim' => 'integer',
+            'nip' => 'integer',
         ];
     }
 
-    /**
-     * Map atribut standar Laravel -> kolom tabel `user`.
-     */
     public function getNameAttribute(): ?string
     {
         return $this->attributes['nama_pengguna'] ?? null;
@@ -76,9 +69,6 @@ class User extends Authenticatable
         $this->attributes['role_user'] = $value;
     }
 
-    /**
-     * Dipakai oleh guard `session` untuk validasi password.
-     */
     public function getAuthPassword()
     {
         return $this->attributes['kata_sandi'] ?? null;
@@ -96,6 +86,32 @@ class User extends Authenticatable
 
     public function loginIdentifier(): ?string
     {
-        return $this->isAdmin() ? $this->nip : $this->nim;
+        if ($this->isAdmin()) {
+            return $this->nip > 0 ? (string) $this->nip : null;
+        }
+
+        return $this->nim > 0 ? (string) $this->nim : null;
+    }
+
+    public function identifierLabel(): string
+    {
+        return $this->isAdmin() ? 'NIP' : 'NIM';
+    }
+
+    public function initials(int $fallbackLength = 2): string
+    {
+        $name = trim((string) ($this->nama_pengguna ?? ''));
+        if ($name === '') {
+            return $this->isAdmin() ? 'AD' : 'MH';
+        }
+
+        $parts = preg_split('/\s+/', $name) ?: [];
+        $initials = collect($parts)
+            ->filter()
+            ->take($fallbackLength)
+            ->map(fn (string $part) => mb_strtoupper(mb_substr($part, 0, 1)))
+            ->join('');
+
+        return $initials !== '' ? $initials : ($this->isAdmin() ? 'AD' : 'MH');
     }
 }

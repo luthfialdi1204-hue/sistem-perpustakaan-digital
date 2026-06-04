@@ -21,9 +21,9 @@
       <select id="loanCategory"
         class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20 sm:w-44">
         <option value="all">Semua Kategori</option>
-        <option value="Fiksi">Fiksi</option>
-        <option value="Pendidikan">Pendidikan</option>
-        <option value="Bisnis">Bisnis</option>
+        @foreach ($categories ?? [] as $cat)
+        <option value="{{ $cat }}">{{ $cat }}</option>
+        @endforeach
       </select>
     </div>
   </div>
@@ -177,94 +177,40 @@ function escHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
-const loans = [
-  {
-    id: 'l1',
-    member: 'Luthfi Dwi Apriyaldi',
-    nim: '3312501077',
-    bookCode: 'BPKSJ123',
-    bookTitle: 'Tentang Kamu',
-    bookAuthor: 'Tere Liye',
-    publisher: 'Republika Penerbit',
-    category: 'Fiksi',
-    yearPublished: '24/Oktober/2016',
-    borrowIso: '2026-03-23',
-    dueIso: '2026-03-30',
-    telat: '2 hari',
-    denda: 'Rp4.000',
-    status: 'Terlambat',
-    cover: 'https://m.media-amazon.com/images/I/81af+MCATTL.jpg',
-  },
-  {
-    id: 'l2',
-    member: 'Muhammad Zaky Sadewa',
-    nim: '3312501085',
-    bookCode: 'BPKSJ124',
-    bookTitle: 'Atomic Habits',
-    bookAuthor: 'James Clear',
-    publisher: 'Avery Publishing',
-    category: 'Pendidikan',
-    yearPublished: '16/Oktober/2018',
-    borrowIso: '2026-03-21',
-    dueIso: '2026-03-28',
-    telat: '',
-    denda: 'Rp0',
-    status: 'Sudah Lunas',
-    cover: 'https://images-na.ssl-images-amazon.com/images/I/91bYsX41DVL.jpg',
-  },
-  {
-    id: 'l3',
-    member: 'Luthfi Dwi Apriyaldi',
-    nim: '3312501077',
-    bookCode: 'BPKSJ123',
-    bookTitle: 'Tentang Kamu',
-    bookAuthor: 'Tere Liye',
-    publisher: 'Republika Penerbit',
-    category: 'Fiksi',
-    yearPublished: '24/Oktober/2016',
-    borrowIso: '2026-03-23',
-    dueIso: '2026-03-30',
-    telat: '',
-    denda: '—',
-    status: 'Mengajukan',
-    cover: 'https://m.media-amazon.com/images/I/81af+MCATTL.jpg',
-  },
-  {
-    id: 'l4',
-    member: 'Cristh Velato Arioranga',
-    nim: '3312601082',
-    bookCode: 'BPKSJ125',
-    bookTitle: 'Filosofi Teras',
-    bookAuthor: 'Henry Manampiring',
-    publisher: 'Kompas',
-    category: 'Pendidikan',
-    yearPublished: '2018',
-    borrowIso: '2026-03-25',
-    dueIso: '2026-04-01',
-    telat: '',
-    dueNote: '3 hari lagi',
-    denda: 'Rp0',
-    status: 'Sedang Dipinjam',
-    cover: 'https://m.media-amazon.com/images/I/81zD9kaVW9L.jpg',
-  },
-  {
-    id: 'l5',
-    member: 'Andi Pratama',
-    nim: '3312501090',
-    bookCode: 'BPKSJ126',
-    bookTitle: 'Bumi',
-    bookAuthor: 'Tere Liye',
-    publisher: 'Gramedia',
-    category: 'Fiksi',
-    yearPublished: '2014',
-    borrowIso: '2026-03-10',
-    dueIso: '2026-03-17',
-    telat: '3 hari',
-    denda: 'Rp6.000',
-    status: 'Dikembalikan',
-    cover: 'https://m.media-amazon.com/images/I/81l3rZK4lnL.jpg',
-  },
-];
+let loans = [];
+const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+const loanListUrl = @json(route('admin.peminjaman.list'));
+const loanUpdateUrl = (id) => @json(url('/admin/peminjaman')) + '/' + id;
+const loanApproveUrl = (id) => @json(url('/admin/peminjaman')) + '/' + id + '/setujui';
+const loanRejectUrl = (id) => @json(url('/admin/peminjaman')) + '/' + id + '/tolak';
+
+async function apiJson(url, options = {}) {
+  const res = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.headers || {}),
+    },
+    credentials: 'same-origin',
+    ...options,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Permintaan gagal.');
+  return data;
+}
+
+async function loadLoans() {
+  const params = new URLSearchParams();
+  const kw = (searchEl.value || '').trim();
+  const cat = catEl.value;
+  if (kw) params.set('q', kw);
+  if (cat && cat !== 'all') params.set('category', cat);
+  const url = params.toString() ? `${loanListUrl}?${params}` : loanListUrl;
+  const json = await apiJson(url);
+  loans = json.data || [];
+  render();
+}
 
 function loanBorrowDisplay(row) {
   return row.borrow || formatShortDate(row.borrowIso) || formatDisplayDate(row.borrowIso);
@@ -411,57 +357,47 @@ function closeEditModal() {
   editLoanModal.setAttribute('aria-hidden', 'true');
 }
 
-function saveModalToLoan() {
+async function saveModalToLoan() {
   if (!editingLoanId) return;
-  const row = loans.find((l) => l.id === editingLoanId);
-  if (!row) return;
-  const newStatus = document.getElementById('modalStatus').value;
-  row.status = newStatus;
-  row.borrowIso = document.getElementById('modalBorrowDate').value;
-  row.dueIso = document.getElementById('modalDueDate').value;
-  row.borrow = formatShortDate(row.borrowIso);
-  row.due = formatShortDate(row.dueIso);
-  row.dueNote = '';
-  if (newStatus === 'Sudah Lunas') {
-    row.telat = '';
-    row.denda = 'Rp0';
-  } else {
-    row.telat = document.getElementById('modalTelat').value || '';
-    row.denda = document.getElementById('modalDenda').value || 'Rp0';
+  try {
+    await apiJson(loanUpdateUrl(editingLoanId), {
+      method: 'PATCH',
+      body: JSON.stringify({
+        status: document.getElementById('modalStatus').value,
+        borrow_date: document.getElementById('modalBorrowDate').value,
+        due_date: document.getElementById('modalDueDate').value,
+        denda: document.getElementById('modalDenda').value,
+      }),
+    });
+    closeEditModal();
+    await loadLoans();
+  } catch (err) {
+    alert(err.message);
   }
-  closeEditModal();
-  render();
 }
 
-function approveLoan(loanId) {
-  const row = loans.find((l) => l.id === loanId);
-  if (!row || row.status !== 'Mengajukan') return;
-  row.status = 'Sedang Dipinjam';
-  row.denda = 'Rp0';
-  row.dueNote = '7 hari lagi';
-  render();
+async function approveLoan(loanId) {
+  try {
+    await apiJson(loanApproveUrl(loanId), { method: 'POST' });
+    await loadLoans();
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
-function rejectLoan(loanId) {
-  const row = loans.find((l) => l.id === loanId);
-  if (!row || row.status !== 'Mengajukan') return;
-  row.status = 'Ditolak';
-  row.denda = '—';
-  render();
+async function rejectLoan(loanId) {
+  if (!confirm('Tolak pengajuan peminjaman ini?')) return;
+  try {
+    await apiJson(loanRejectUrl(loanId), { method: 'POST' });
+    await loadLoans();
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 function render() {
-  const kw = (searchEl.value || '').toLowerCase().trim();
-  const cat = catEl.value;
-  const filtered = loans.filter((row) => {
-    const haystack = (row.bookTitle + ' ' + row.bookAuthor + ' ' + row.member + ' ' + (row.nim || '')).toLowerCase();
-    const matchKw = !kw || haystack.includes(kw);
-    const matchCat = cat === 'all' || row.category === cat;
-    return matchKw && matchCat;
-  });
-
-  tbody.innerHTML = filtered.map((r) => rowHtml(r)).join('');
-  if (emptyMsg) emptyMsg.classList.toggle('hidden', filtered.length > 0);
+  tbody.innerHTML = loans.map((r) => rowHtml(r)).join('');
+  if (emptyMsg) emptyMsg.classList.toggle('hidden', loans.length > 0);
 }
 
 tbody.addEventListener('click', (e) => {
@@ -481,8 +417,12 @@ editLoanModal.addEventListener('click', (e) => {
   if (e.target === editLoanModal) closeEditModal();
 });
 
-searchEl.addEventListener('input', render);
-catEl.addEventListener('change', render);
-render();
+let searchTimer;
+searchEl.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadLoans().catch((e) => alert(e.message)), 300);
+});
+catEl.addEventListener('change', () => loadLoans().catch((e) => alert(e.message)));
+loadLoans().catch((e) => alert(e.message));
 </script>
 @endpush

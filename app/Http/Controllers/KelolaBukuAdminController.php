@@ -5,25 +5,25 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\FormatsBuku;
 use App\Models\Buku;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class KelolaBukuAdminController extends Controller
 {
     use FormatsBuku;
 
-    private function formatRow(Buku $b): array
+    private function rules(int|string|null $exceptKodeBuku = null): array
     {
-        return $this->formatBukuRow($b);
-    }
+        $codeRule = Rule::unique('buku', 'nomor_panggil');
+        if ($exceptKodeBuku !== null) {
+            $codeRule = $codeRule->ignore((int) $exceptKodeBuku, 'kode_buku');
+        }
 
-    private function rules(): array
-    {
         return [
-            'code' => ['required', 'string', 'max:50'],
+            'code' => ['required', 'string', 'max:50', $codeRule],
             'title' => ['required', 'string', 'max:255'],
             'author' => ['required', 'string', 'max:100'],
             'publisher' => ['required', 'string', 'max:100'],
-            'category' => ['required', 'string', 'max:50'],
+            'category' => ['required', 'string', Rule::in(Buku::kategoriList())],
             'year' => ['required', 'numeric', 'min:1900', 'max:2100'],
             'stock' => ['required', 'numeric', 'min:0'],
             'isbn' => ['nullable', 'string', 'max:50'],
@@ -33,111 +33,122 @@ class KelolaBukuAdminController extends Controller
         ];
     }
 
-    private function bookAttributes(Request $request, string $coverPath = ''): array
-    {
-        return [
-            'kode_registrasi' => strtoupper(trim((string) $request->input('code'))),
-            'judul_buku' => $request->input('title'),
-            'pengarang' => $request->input('author'),
-            'penerbit' => $request->input('publisher'),
-            'kategori_buku' => $request->input('category'),
-            'tahun_terbit' => (int) $request->input('year'),
-            'stok_buku' => (int) $request->input('stock'),
-            'isbn' => $this->normalizeIsbn($request->input('isbn')),
-            'lokasi_rak' => $this->normalizeRak($request->input('rack')),
-            'deskripsi_buku' => $this->encodeDeskripsiMeta($request->input('description'), $coverPath),
-        ];
-    }
-
     public function index()
     {
         return view('Admin.kelola_buku_admin');
     }
 
-    public function list()
+    public function list(Request $request)
     {
-        $rows = Buku::query()
+        $perPage = (int) $request->input('per_page', 6);
+        if ($perPage < 1) {
+            $perPage = 6;
+        }
+        if ($perPage > 50) {
+            $perPage = 50;
+        }
+
+        $paginated = $this->applyBukuSearch(Buku::query(), $request)
             ->orderByDesc('kode_buku')
-            ->get()
-            ->map(fn (Buku $b) => $this->formatRow($b));
+            ->paginate($perPage);
+
+        $rows = $paginated->getCollection()
+            ->map(fn (Buku $b) => $this->formatBukuRow($b))
+            ->values();
 
         return response()->json([
             'data' => $rows,
             'categories' => $this->bukuCategories(),
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'total' => $paginated->total(),
+                'per_page' => $paginated->perPage(),
+            ],
+        ]);
+    }
+
+    public function show(int|string $id)
+    {
+        $buku = Buku::query()->where('kode_buku', (int) $id)->first();
+        if (! $buku) {
+            return response()->json(['message' => 'Buku tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'data' => $this->formatBukuRow($buku),
         ]);
     }
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), $this->rules(), $this->messages());
+        $validated = $request->validate($this->rules(), $this->messages());
 
-        $validator->after(function ($v) use ($request) {
-            $code = strtoupper(trim((string) $request->input('code')));
-            if ($code !== '' && Buku::query()->where('kode_registrasi', $code)->exists()) {
-                $v->errors()->add('code', 'Kode buku sudah digunakan.');
-            }
-        });
-
-        if ($validator->fails()) {
-            return response()->json(['message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
-        }
-
-        $buku = Buku::query()->create($this->bookAttributes($request));
+        $buku = Buku::query()->create([
+            'nomor_panggil' => trim($validated['code']),               
+            'judul_buku' => $validated['title'],                       
+            'pengarang' => $validated['author'],                       
+            'penerbit' => $validated['publisher'],                     
+            'kategori_buku' => $validated['category'],                   
+            'tahun_terbit' => (int) $validated['year'],                  
+            'stok_buku' => (int) $validated['stock'],                    
+            'isbn' => $this->normalizeIsbn($validated['isbn'] ?? null),
+            'lokasi_rak' => $this->normalizeRak($validated['rack'] ?? null),
+            'deskripsi_buku' => $this->encodeDeskripsiMeta($validated['description'] ?? null, ''),
+        ]);
 
         if ($request->hasFile('cover')) {
             $coverPath = $this->saveCover($request->file('cover'), (int) $buku->kode_buku);
-            $buku->deskripsi_buku = $this->encodeDeskripsiMeta($request->input('description'), $coverPath);
-            $buku->save();
+
+            $buku->update([
+                'deskripsi_buku' => $this->encodeDeskripsiMeta($validated['description'] ?? null, $coverPath),
+            ]);
         }
 
         return response()->json([
             'message' => 'Buku berhasil ditambahkan',
-            'data' => $this->formatRow($buku->fresh()),
-        ]);
+            'data' => $this->formatBukuRow($buku->fresh()),
+        ], 201);
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int|string $id)
     {
-        $validator = Validator::make($request->all(), $this->rules(), $this->messages());
+        $kodeBuku = (int) $id;
+        $validated = $request->validate($this->rules($kodeBuku), $this->messages());
 
-        $validator->after(function ($v) use ($request, $id) {
-            $code = strtoupper(trim((string) $request->input('code')));
-            if ($code !== '' && Buku::query()
-                ->where('kode_registrasi', $code)
-                ->where('kode_buku', '!=', $id)
-                ->exists()) {
-                $v->errors()->add('code', 'Kode buku sudah digunakan.');
-            }
-        });
-
-        if ($validator->fails()) {
-            return response()->json(['message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
-        }
-
-        $buku = Buku::query()->where('kode_buku', $id)->first();
+        $buku = Buku::query()->where('kode_buku', $kodeBuku)->first();
         if (! $buku) {
             return response()->json(['message' => 'Buku tidak ditemukan'], 404);
         }
 
         $meta = $this->parseDeskripsiMeta($buku->deskripsi_buku);
         $coverPath = $meta['cover'];
-
         if ($request->hasFile('cover')) {
-            $coverPath = $this->saveCover($request->file('cover'), (int) $buku->kode_buku);
+            $coverPath = $this->saveCover($request->file('cover'), $kodeBuku);
         }
 
-        $buku->fill($this->bookAttributes($request, $coverPath));
-        $buku->save();
+        $buku->update([
+            'nomor_panggil' => trim($validated['code']),               // <- kode buku / nomor panggil
+            'judul_buku' => $validated['title'],
+            'pengarang' => $validated['author'],
+            'penerbit' => $validated['publisher'],
+            'kategori_buku' => $validated['category'],
+            'tahun_terbit' => (int) $validated['year'],
+            'stok_buku' => (int) $validated['stock'],
+            'isbn' => $this->normalizeIsbn($validated['isbn'] ?? null),
+            'lokasi_rak' => $this->normalizeRak($validated['rack'] ?? null),
+            'deskripsi_buku' => $this->encodeDeskripsiMeta($validated['description'] ?? null, $coverPath),
+        ]);
 
         return response()->json([
             'message' => 'Buku berhasil diperbarui',
-            'data' => $this->formatRow($buku),
+            'data' => $this->formatBukuRow($buku->fresh()),
         ]);
     }
 
-    public function destroy(int $id)
+    public function destroy(int|string $id)
     {
-        $buku = Buku::query()->where('kode_buku', $id)->first();
+        $buku = Buku::query()->where('kode_buku', (int) $id)->first();
         if (! $buku) {
             return response()->json(['message' => 'Buku tidak ditemukan'], 404);
         }
@@ -155,11 +166,13 @@ class KelolaBukuAdminController extends Controller
     private function messages(): array
     {
         return [
-            'code.required' => 'Kode buku wajib diisi.',
+            'code.required' => 'Nomor panggil wajib diisi.',
+            'code.unique' => 'Nomor panggil sudah digunakan buku lain.',
             'title.required' => 'Judul buku wajib diisi.',
             'author.required' => 'Pengarang wajib diisi.',
             'publisher.required' => 'Penerbit wajib diisi.',
             'category.required' => 'Kategori wajib dipilih.',
+            'category.in' => 'Kategori tidak valid.',
             'year.required' => 'Tahun terbit wajib diisi.',
             'year.min' => 'Tahun terbit tidak valid.',
             'stock.required' => 'Jumlah buku wajib diisi.',
