@@ -6,3 +6,27 @@
   </div>
 </div>
 
+@if(session('success'))
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      if (window.AdminUi && typeof window.AdminUi.toast === 'function') {
+        window.AdminUi.toast("{{ session('success') }}", "success");
+      }
+    }, 100);
+  });
+</script>
+@endif
+
+@if(session('error'))
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      if (window.AdminUi && typeof window.AdminUi.toast === 'function') {
+        window.AdminUi.toast("{{ session('error') }}", "error");
+      }
+    }, 100);
+  });
+</script>
+@endif
+

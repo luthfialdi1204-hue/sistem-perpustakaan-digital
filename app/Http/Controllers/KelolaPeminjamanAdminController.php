@@ -48,8 +48,18 @@ class KelolaPeminjamanAdminController extends Controller
         }
 
         DB::transaction(function () use ($detail, $buku) {
-            $pinjam = now();
-            $jatuhTempo = $pinjam->copy()->addDays(DetailPeminjaman::LOAN_DAYS);
+            $pinjam = $detail->tgl_Peminjaman ? Carbon::parse($detail->tgl_Peminjaman)->startOfDay() : now()->startOfDay();
+            
+            // If requested start date is before today, update to today
+            if ($pinjam->isBefore(now()->startOfDay())) {
+                $pinjam = now()->startOfDay();
+            }
+
+            $jatuhTempo = $detail->tgl_pengembalian ? Carbon::parse($detail->tgl_pengembalian)->startOfDay() : $pinjam->copy()->addDays(DetailPeminjaman::LOAN_DAYS);
+            
+            if ($jatuhTempo->lte($pinjam)) {
+                $jatuhTempo = $pinjam->copy()->addDays(DetailPeminjaman::LOAN_DAYS);
+            }
 
             $detail->status_transaksi = DetailPeminjaman::STATUS_DIPINJAM;
             $detail->tgl_Peminjaman = $pinjam;
@@ -126,8 +136,11 @@ class KelolaPeminjamanAdminController extends Controller
                 $detail->subtotal = 0;
                 $detail->tgl_pengembalian = now();
             } elseif ($newStatus === DetailPeminjaman::STATUS_DIKEMBALIKAN) {
+                $autoDenda = $this->computeFineAmount($detail);
                 $detail->status_transaksi = DetailPeminjaman::STATUS_DIKEMBALIKAN;
-                $detail->subtotal = $this->parseDendaInput($request->input('denda'));
+                $detail->subtotal = $request->filled('denda')
+                    ? $this->parseDendaInput($request->input('denda'))
+                    : $autoDenda;
                 $detail->tgl_pengembalian = now();
             } else {
                 $detail->status_transaksi = $newStatus;

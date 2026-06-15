@@ -135,7 +135,7 @@
           <th class="px-3 py-2 min-w-[88px] text-center">Aksi</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-slate-100">
+      <tbody id="historyTableBody" class="divide-y divide-slate-100">
         @foreach(($rows ?? []) as $row)
           @php
             $status = (string)($row['status'] ?? '');
@@ -178,14 +178,10 @@
                   <i class="bi bi-eye text-sm"></i>
                 </button>
                 @if($canCancel)
-                  <form method="POST" action="{{ route('mahasiswa.peminjaman.cancel', ['id' => $row['id'] ?? 0]) }}"
-                    onsubmit="return confirm('Batalkan pengajuan peminjaman ini?');">
-                    @csrf
-                    @method('PATCH')
-                    <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:bg-rose-100">
-                      <i class="bi bi-x-circle text-sm"></i>
-                    </button>
-                  </form>
+                  <button type="button" class="history-action-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:bg-rose-100"
+                    data-action="cancel" data-id="{{ $row['id'] ?? 0 }}" title="Batalkan pengajuan">
+                    <i class="bi bi-x-circle text-sm"></i>
+                  </button>
                 @endif
               </div>
             </td>
@@ -286,29 +282,46 @@
   </div>
 </div>
 
-<!-- MODAL KONFIRMASI BATAL -->
-<div id="cancelConfirmModal" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-50 justify-center items-center w-full h-full p-4" tabindex="-1" aria-hidden="true">
-  <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-      <i class="bi bi-exclamation-triangle-fill text-2xl"></i>
-    </div>
-    <h3 class="text-center text-lg font-bold text-slate-800">Batalkan Pengajuan?</h3>
-    <p class="mt-2 text-center text-sm text-slate-500">
-      Pengajuan peminjaman <span id="cancelBookTitle" class="font-semibold text-slate-700"></span> akan dibatalkan.
-      Tindakan ini tidak dapat dibatalkan.
-    </p>
-    <div class="mt-6 flex gap-3">
-      <button type="button" id="cancelConfirmNo"
-        class="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
-        Tidak, Kembali
-      </button>
-      <button type="button" id="cancelConfirmYes"
-        class="flex-1 rounded-xl bg-rose-500 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600">
-        Ya, Batalkan
-      </button>
+<!-- MODAL KONFIRMASI BATALKAN -->
+<div id="cancelConfirmModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div id="cancelBackdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeCancelModal()"></div>
+  <!-- Panel -->
+  <div class="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden"
+       style="animation: slideUp .2s ease">
+    <!-- Top accent -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-rose-500 to-rose-400"></div>
+    <div class="px-6 pt-6 pb-5">
+      <!-- Icon -->
+      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 ring-8 ring-rose-50">
+        <i class="bi bi-exclamation-triangle-fill text-3xl text-rose-500"></i>
+      </div>
+      <!-- Text -->
+      <h3 class="text-center text-lg font-bold text-slate-800">Batalkan Pengajuan?</h3>
+      <p class="mt-2 text-center text-sm text-slate-500 leading-relaxed">
+        Pengajuan peminjaman akan dibatalkan dan tidak dapat dikembalikan ke status semula.
+      </p>
+      <!-- Buttons -->
+      <div class="mt-6 flex gap-3">
+        <button type="button" onclick="closeCancelModal()"
+          class="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-95">
+          Tidak, Kembali
+        </button>
+        <button type="button" id="cancelConfirmOkBtn"
+          class="flex-1 rounded-xl bg-rose-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-600 active:scale-95 flex items-center justify-center gap-1.5">
+          <i class="bi bi-x-circle"></i> Ya, Batalkan
+        </button>
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>
 
 @endsection
 
@@ -381,14 +394,12 @@ async function loadHistory() {
   render();
 }
 
-let pendingCancelId = null;
 let viewingDetailId = null;
 let toastTimer = null;
 
 const tbody = document.getElementById('historyTableBody');
 const emptyMsg = document.getElementById('historyEmpty');
 const detailModal = document.getElementById('detailModal');
-const cancelConfirmModal = document.getElementById('cancelConfirmModal');
 const statusFilterEl = document.getElementById('historyStatusFilter');
 const searchEl = document.getElementById('historySearch');
 const countEl = document.getElementById('historyCount');
@@ -650,33 +661,52 @@ function closeDetailModal() {
   detailModal.setAttribute('aria-hidden', 'true');
 }
 
+let pendingCancelId = null;
+
 function openCancelConfirm(id) {
-  const row = historyRows.find((r) => r.id === id);
-  if (!row || row.status !== 'Mengajukan') return;
   pendingCancelId = id;
-  document.getElementById('cancelBookTitle').textContent = `"${row.bookTitle}"`;
-  fbShow('cancelConfirmModal');
-  cancelConfirmModal.setAttribute('aria-hidden', 'false');
+  document.getElementById('cancelConfirmModal').classList.remove('hidden');
 }
 
-function closeCancelConfirm() {
+function closeCancelModal() {
   pendingCancelId = null;
-  fbHide('cancelConfirmModal');
-  cancelConfirmModal.setAttribute('aria-hidden', 'true');
+  document.getElementById('cancelConfirmModal').classList.add('hidden');
 }
 
-async function cancelApplication(id) {
-  const row = historyRows.find((r) => r.id === id);
-  if (!row || row.status !== 'Mengajukan') return;
-  try {
-    await apiJson(historyCancelUrl(id), { method: 'PATCH' });
-    closeCancelConfirm();
-    if (viewingDetailId === id) closeDetailModal();
-    await loadHistory();
-    showToast('Pengajuan peminjaman berhasil dibatalkan.');
-  } catch (err) {
-    alert(err.message);
+document.getElementById('cancelConfirmOkBtn').addEventListener('click', () => {
+  if (pendingCancelId !== null) {
+    const id = pendingCancelId;
+    closeCancelModal();
+    cancelApplication(id);
   }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !document.getElementById('cancelConfirmModal').classList.contains('hidden')) {
+    closeCancelModal();
+  }
+});
+
+function cancelApplication(id) {
+  const cancelUrl = "{{ url('/mahasiswa/peminjaman') }}";
+  fetch(`${cancelUrl}/${id}/batal`, {
+    method: 'PATCH',
+    headers: {
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      'Accept': 'application/json',
+    },
+    credentials: 'same-origin'
+  }).then(async response => {
+    const data = await response.json();
+    if (!response.ok) {
+      alert(data.message || 'Gagal membatalkan peminjaman.');
+      return;
+    }
+    // Refresh halaman agar data server-rendered ikut terupdate
+    window.location.reload();
+  }).catch(error => {
+    alert('Terjadi kesalahan: ' + error.message);
+  });
 }
 
 function showToast(message) {
@@ -694,28 +724,21 @@ function showToast(message) {
 tbody.addEventListener('click', (e) => {
   const btn = e.target.closest('.history-action-btn');
   if (!btn) return;
-  const id = btn.dataset.id;
+  const id = Number(btn.dataset.id);
   const action = btn.dataset.action;
   if (action === 'detail') openDetailModal(id);
   if (action === 'cancel') openCancelConfirm(id);
 });
 
-document.getElementById('cancelConfirmNo').addEventListener('click', closeCancelConfirm);
-document.getElementById('cancelConfirmYes').addEventListener('click', () => {
-  if (pendingCancelId) cancelApplication(pendingCancelId);
-});
+
 
 detailModal.addEventListener('click', (e) => {
   if (e.target === detailModal) closeDetailModal();
 });
-cancelConfirmModal.addEventListener('click', (e) => {
-  if (e.target === cancelConfirmModal) closeCancelConfirm();
-});
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  if (!cancelConfirmModal.classList.contains('hidden')) closeCancelConfirm();
-  else if (!detailModal.classList.contains('hidden')) closeDetailModal();
+  if (!detailModal.classList.contains('hidden')) closeDetailModal();
 });
 
 const applyBtn = document.getElementById('historyFilterApply');

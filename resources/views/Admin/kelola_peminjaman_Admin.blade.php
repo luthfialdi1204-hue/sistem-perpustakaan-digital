@@ -140,6 +140,69 @@
     </div>
   </div>
 </div>
+</div>
+
+<!-- MODAL KONFIRMASI SETUJUI -->
+<div id="approveConfirmModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeApproveModal()"></div>
+  <div class="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden" style="animation: slideUp .2s ease">
+    <div class="h-1.5 w-full bg-gradient-to-r from-emerald-500 to-teal-400"></div>
+    <div class="px-6 pt-6 pb-5">
+      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 ring-8 ring-emerald-50">
+        <i class="bi bi-check-circle-fill text-3xl text-emerald-500"></i>
+      </div>
+      <h3 class="text-center text-lg font-bold text-slate-800">Setujui Pengajuan?</h3>
+      <p class="mt-2 text-center text-sm text-slate-500 leading-relaxed">
+        Pengajuan peminjaman akan disetujui dan buku akan dipinjamkan kepada anggota.
+      </p>
+      <div class="mt-6 flex gap-3">
+        <button type="button" onclick="closeApproveModal()"
+          class="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-95">
+          Batal
+        </button>
+        <button type="button" id="approveConfirmOkBtn"
+          class="flex-1 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 active:scale-95 flex items-center justify-center gap-1.5">
+          <i class="bi bi-check-lg"></i> Ya, Setujui
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KONFIRMASI TOLAK -->
+<div id="rejectConfirmModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeRejectModal()"></div>
+  <div class="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden" style="animation: slideUp .2s ease">
+    <div class="h-1.5 w-full bg-gradient-to-r from-rose-500 to-rose-400"></div>
+    <div class="px-6 pt-6 pb-5">
+      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 ring-8 ring-rose-50">
+        <i class="bi bi-x-circle-fill text-3xl text-rose-500"></i>
+      </div>
+      <h3 class="text-center text-lg font-bold text-slate-800">Tolak Pengajuan?</h3>
+      <p class="mt-2 text-center text-sm text-slate-500 leading-relaxed">
+        Pengajuan peminjaman akan ditolak dan tidak dapat dikembalikan ke status semula.
+      </p>
+      <div class="mt-6 flex gap-3">
+        <button type="button" onclick="closeRejectModal()"
+          class="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-95">
+          Batal
+        </button>
+        <button type="button" id="rejectConfirmOkBtn"
+          class="flex-1 rounded-xl bg-rose-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-600 active:scale-95 flex items-center justify-center gap-1.5">
+          <i class="bi bi-x-lg"></i> Ya, Tolak
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>
+
 @endsection
 
 @push('scripts')
@@ -376,29 +439,56 @@ async function saveModalToLoan() {
   }
 }
 
-async function approveLoan(loanId) {
-  try {
-    await apiJson(loanApproveUrl(loanId), { method: 'POST' });
-    await loadLoans();
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
-async function rejectLoan(loanId) {
-  if (!confirm('Tolak pengajuan peminjaman ini?')) return;
-  try {
-    await apiJson(loanRejectUrl(loanId), { method: 'POST' });
-    await loadLoans();
-  } catch (err) {
-    alert(err.message);
-  }
-}
+let pendingApproveId = null;
+let pendingRejectId = null;
 
 function render() {
   tbody.innerHTML = loans.map((r) => rowHtml(r)).join('');
   if (emptyMsg) emptyMsg.classList.toggle('hidden', loans.length > 0);
 }
+
+function openApproveConfirm(id) {
+  pendingApproveId = id;
+  document.getElementById('approveConfirmModal').classList.remove('hidden');
+}
+function closeApproveModal() {
+  pendingApproveId = null;
+  document.getElementById('approveConfirmModal').classList.add('hidden');
+}
+function openRejectConfirm(id) {
+  pendingRejectId = id;
+  document.getElementById('rejectConfirmModal').classList.remove('hidden');
+}
+function closeRejectModal() {
+  pendingRejectId = null;
+  document.getElementById('rejectConfirmModal').classList.add('hidden');
+}
+
+document.getElementById('approveConfirmOkBtn').addEventListener('click', async () => {
+  if (pendingApproveId === null) return;
+  const id = pendingApproveId;
+  closeApproveModal();
+  try {
+    await apiJson(loanApproveUrl(id), { method: 'POST' });
+    await loadLoans();
+  } catch (err) { alert(err.message); }
+});
+
+document.getElementById('rejectConfirmOkBtn').addEventListener('click', async () => {
+  if (pendingRejectId === null) return;
+  const id = pendingRejectId;
+  closeRejectModal();
+  try {
+    await apiJson(loanRejectUrl(id), { method: 'POST' });
+    await loadLoans();
+  } catch (err) { alert(err.message); }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!document.getElementById('approveConfirmModal').classList.contains('hidden')) closeApproveModal();
+  if (!document.getElementById('rejectConfirmModal').classList.contains('hidden')) closeRejectModal();
+});
 
 tbody.addEventListener('click', (e) => {
   const btn = e.target.closest('.loan-action-btn');
@@ -406,8 +496,8 @@ tbody.addEventListener('click', (e) => {
   const id = btn.getAttribute('data-loan-id');
   const action = btn.getAttribute('data-action');
   if (action === 'edit') openEditModal(id);
-  if (action === 'approve') approveLoan(id);
-  if (action === 'reject') rejectLoan(id);
+  if (action === 'approve') openApproveConfirm(id);
+  if (action === 'reject') openRejectConfirm(id);
 });
 
 document.getElementById('modalBtnBack').addEventListener('click', closeEditModal);

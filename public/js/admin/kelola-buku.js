@@ -373,6 +373,7 @@
   window.confirmDeleteBuku = confirmDeleteBuku;
   window.saveTambahBook = saveTambahBook;
   window.saveEditBook = saveEditBook;
+  window.changePage = changePage;
 
   // events
   if (bookContainer) {

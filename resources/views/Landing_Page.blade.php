@@ -68,11 +68,11 @@
 
       <div class="mt-8 flex gap-8 text-white">
         <div>
-          <h3 class="text-2xl font-bold">20+</h3>
+          <h3 class="text-2xl font-bold">{{ $totalBooks }}+</h3>
           <p class="text-sm">Koleksi Buku</p>
         </div>
         <div>
-          <h3 class="text-2xl font-bold">2+</h3>
+          <h3 class="text-2xl font-bold">{{ $totalUsers }}+</h3>
           <p class="text-sm">Pengguna</p>
         </div>
         <div>
@@ -159,15 +159,7 @@
     <div id="book-container" class="grid grid-cols-2 md:grid-cols-4 gap-6 gap-y-8"></div>
 
     <!-- PAGINATION -->
-    <div class="flex justify-center mt-10 gap-2 items-center">
-      <button onclick="loadPage(1)" id="page-1" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow">1</button>
-      <button onclick="loadPage(2)" id="page-2" class="px-4 py-2 bg-white text-blue-600 rounded-lg shadow">2</button>
-      <button onclick="loadPage(3)" id="page-3" class="px-4 py-2 bg-white text-blue-600 rounded-lg shadow">3</button>
-      <span class="px-2 text-gray-500">...</span>
-      <button onclick="loadPage(currentPage + 1)" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-        Next →
-      </button>
-    </div>
+    <div id="pagination-wrapper" class="flex justify-center mt-10 gap-2 items-center"></div>
   </div>
 </section>
  
@@ -254,77 +246,116 @@
 
 <!-- SCRIPT -->
 <script>
+const allBooks = @json($books ?? []);
+const perPage = 8;
 let currentPage = 1;
 
-function createCard(img, title){
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function createCard(book){
+  const img = book.img;
+  const title = escHtml(book.title);
+  const author = escHtml(book.author);
+  const publisher = escHtml(book.publisher);
+  const year = escHtml(book.year);
+  const desc = escHtml(book.description);
+
   return `
     <div class="bg-white rounded-xl shadow-md p-4 flex flex-col hover:shadow-xl hover:-translate-y-1 transition duration-300">
-      
       <div class="overflow-hidden rounded-lg">
-        <img src="${img}" class="w-full h-56 object-cover hover:scale-105 transition duration-300">
+        <img src="${img}" class="w-full h-56 object-cover hover:scale-105 transition duration-300" alt="${title}">
       </div>
-
-      <h6 class="mt-3 font-semibold text-[#1E376E] text-sm">${title}</h6>
-
+      <h6 class="mt-3 font-semibold text-[#1E376E] text-sm truncate text-left" title="${title}">${title}</h6>
       <button 
         onclick="showDetail(this)"
         data-title="${title}"
-        data-author="James Clear"
-        data-publisher="Avery Publishing"
-        data-year="2018"
-        data-desc="Buku tentang kebiasaan kecil yang berdampak besar."
+        data-author="${author}"
+        data-publisher="${publisher}"
+        data-year="${year}"
+        data-desc="${desc}"
         data-img="${img}"
         data-modal-target="detailModal"
         data-modal-toggle="detailModal"
-        class="mt-3 w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 rounded-lg text-sm hover:opacity-90 transition">
+        class="mt-3 w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 rounded-lg text-sm hover:opacity-90 transition shadow-sm">
         Detail
       </button>
-
     </div>
   `;
+}
+
+function renderPagination(totalBooks, perPage, page) {
+  const wrapper = document.getElementById("pagination-wrapper");
+  if (!wrapper) return;
+
+  const totalPages = Math.ceil(totalBooks / perPage);
+  if (totalPages <= 1) {
+    wrapper.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+  
+  // Previous button (only if not on first page)
+  if (page > 1) {
+    html += `
+      <button onclick="loadPage(${page - 1})" class="px-4 py-2 bg-white text-blue-600 rounded-lg shadow hover:bg-slate-50 transition">
+        ← Prev
+      </button>
+    `;
+  }
+
+  // Page numbers
+  for (let i = 1; i <= totalPages; i++) {
+    const activeClass = i === page ? "bg-blue-600 text-white" : "bg-white text-blue-600 hover:bg-slate-50";
+    html += `<button onclick="loadPage(${i})" class="px-4 py-2 ${activeClass} rounded-lg shadow font-semibold transition">${i}</button>`;
+  }
+
+  // Next button
+  if (page < totalPages) {
+    html += `
+      <button onclick="loadPage(${page + 1})" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+        Next →
+      </button>
+    `;
+  }
+
+  wrapper.innerHTML = html;
 }
 
 function loadPage(page){
   currentPage = page;
   const container = document.getElementById("book-container");
+  if (!container) return;
 
-  let books = [];
-
-  if(page === 1){
-    books = Array(12).fill({
-      img: "{{ asset('images/Cover buku 3.jpg') }}",
-      title: "Atomic Habits"
-    });
-  } else if(page === 2){
-    books = Array(12).fill({
-      img: "{{ asset('images/Cover buku 2.jpg') }}",
-      title: "Rich Dad Poor Dad"
-    });
-  } else {
-    books = Array(12).fill({
-      img: "{{ asset('images/Cover buku 1.jpg') }}",
-      title: "The Psychology of Money"
-    });
+  if (allBooks.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full py-16 text-center text-slate-500">
+        <i class="bi bi-journal-x mb-2 block text-4xl text-slate-300"></i>
+        Belum ada koleksi buku di perpustakaan.
+      </div>
+    `;
+    renderPagination(0, perPage, 1);
+    return;
   }
 
-  container.innerHTML = books.map(b => createCard(b.img, b.title)).join("");
-    if (typeof initFlowbite === "function") {
-      initFlowbite();
+  const startIndex = (page - 1) * perPage;
+  const pageBooks = allBooks.slice(startIndex, startIndex + perPage);
+
+  container.innerHTML = pageBooks.map(b => createCard(b)).join("");
+  
+  if (typeof initFlowbite === "function") {
+    initFlowbite();
   }
 
-  [1,2,3].forEach(i => {
-    const btn = document.getElementById("page-" + i);
-    if(btn){
-      btn.classList.remove("bg-blue-600","text-white");
-      btn.classList.add("bg-white","text-blue-600");
-    }
-  });
-
-    const active = document.getElementById("page-" + page);
-    if(active){
-      active.classList.remove("bg-white","text-blue-600");
-    active.classList.add("bg-blue-600","text-white");
-  }
+  renderPagination(allBooks.length, perPage, page);
 }
 
 /* 🔥 INI BAGIAN PENTING (DETAIL MODAL) */

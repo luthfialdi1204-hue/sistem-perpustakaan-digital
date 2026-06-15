@@ -12,7 +12,10 @@
 <body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50/40 to-slate-100 font-sans text-slate-800 antialiased">
 @include('components.mahasiswa.sidebar', ['activePage' => trim($__env->yieldContent('active_page'))])
 
-<div class="ml-64 p-6 md:p-8 min-h-screen">
+<!-- Backdrop for mobile sidebar -->
+<div id="sidebarBackdrop" class="fixed inset-0 z-30 hidden bg-slate-900/40 backdrop-blur-sm lg:hidden"></div>
+
+<div class="lg:ml-64 p-6 md:p-8 min-h-screen">
   @include('components.mahasiswa.topbar', [
       'title' => trim($__env->yieldContent('page_title')) ?: 'Halaman Mahasiswa',
       'subtitle' => trim($__env->yieldContent('page_subtitle')),
@@ -40,6 +43,27 @@
 <script>
 const yearElement = document.getElementById("year");
 if (yearElement) yearElement.textContent = new Date().getFullYear();
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sidebar = document.getElementById('mahasiswaSidebar');
+  const toggleBtn = document.getElementById('sidebarToggle');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const closeBtn = document.getElementById('sidebarClose');
+
+  function openSidebar() {
+    if (sidebar) sidebar.classList.remove('-translate-x-full');
+    if (backdrop) backdrop.classList.remove('hidden');
+  }
+
+  function closeSidebar() {
+    if (sidebar) sidebar.classList.add('-translate-x-full');
+    if (backdrop) backdrop.classList.add('hidden');
+  }
+
+  if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+  if (backdrop) backdrop.addEventListener('click', closeSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+});
 </script>
 @stack('scripts')
 </body>

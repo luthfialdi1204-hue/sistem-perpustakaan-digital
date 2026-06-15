@@ -32,11 +32,11 @@
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <div class="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
       <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1E376E] ring-4 ring-[#1E376E]/15">
-        <i class="bi bi-journal-bookmark text-white text-xl"></i>
+        <i class="bi bi-journal-arrow-up text-white text-xl"></i>
       </div>
       <div class="min-w-0">
-        <p class="text-sm text-slate-500">Total Peminjaman</p>
-        <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['total'] ?? 0) }}</p>
+        <p class="text-sm text-slate-500">Sedang Dipinjam</p>
+        <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['sedang_dipinjam'] ?? 0) }}</p>
         <p class="mt-0.5 text-xs text-emerald-600 flex items-center gap-0.5">
           <i class="bi bi-arrow-up-short text-base"></i> <span id="statTotalTrend">—</span>
         </p>
@@ -47,28 +47,28 @@
         <i class="bi bi-check2-square text-white text-xl"></i>
       </div>
       <div class="min-w-0">
-        <p class="text-sm text-slate-500">Selesai</p>
-        <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['selesai'] ?? 0) }}</p>
+        <p class="text-sm text-slate-500">Dikembalikan</p>
+        <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['dikembalikan'] ?? 0) }}</p>
         @php
           $total = max(0, (int)($stats['total'] ?? 0));
-          $selesai = max(0, (int)($stats['selesai'] ?? 0));
-          $selesaiPct = $total ? round(($selesai / $total) * 100, 1) : 0;
+          $dikembalikan = max(0, (int)($stats['dikembalikan'] ?? 0));
+          $dikembalikanPct = $total ? round(($dikembalikan / $total) * 100, 1) : 0;
         @endphp
-        <p class="mt-0.5 text-xs text-slate-500">{{ rtrim(rtrim((string)$selesaiPct, '0'), '.') }}% dari total</p>
+        <p class="mt-0.5 text-xs text-slate-500">{{ rtrim(rtrim((string)$dikembalikanPct, '0'), '.') }}% dari total</p>
       </div>
     </div>
     <div class="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-500 ring-4 ring-amber-500/15">
-        <i class="bi bi-clock-history text-white text-xl"></i>
+      <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-violet-500 ring-4 ring-violet-500/15">
+        <i class="bi bi-send text-white text-xl"></i>
       </div>
       <div class="min-w-0">
-        <p class="text-sm text-slate-500">Terlambat</p>
-        <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['terlambat'] ?? 0) }}</p>
+        <p class="text-sm text-slate-500">Mengajukan</p>
+        <p class="text-2xl font-bold text-slate-800">{{ (int)($stats['mengajukan'] ?? 0) }}</p>
         @php
-          $terlambat = max(0, (int)($stats['terlambat'] ?? 0));
-          $terlambatPct = $total ? round(($terlambat / $total) * 100, 1) : 0;
+          $mengajukan = max(0, (int)($stats['mengajukan'] ?? 0));
+          $mengajukanPct = $total ? round(($mengajukan / $total) * 100, 1) : 0;
         @endphp
-        <p class="mt-0.5 text-xs text-slate-500">{{ rtrim(rtrim((string)$terlambatPct, '0'), '.') }}% dari total</p>
+        <p class="mt-0.5 text-xs text-slate-500">{{ rtrim(rtrim((string)$mengajukanPct, '0'), '.') }}% dari total</p>
       </div>
     </div>
     <div class="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
@@ -295,41 +295,123 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-/* server-rendered: disable old AJAX/chart script
-const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-const ROWS_PER_PAGE = 5;
-let currentPage = 1;
-let summaryChartInstance = null;
-let lastPage = 1;
-let totalRows = 0;
-let currentFilters = { q: '', status: 'all', start: '', end: '' };
+(function () {
+  /* ── Helpers ── */
+  const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
-function formatDisplayDate(iso) {
-  if (!iso) return '';
-  const [y, m, d] = iso.split('-').map(Number);
-  if (!y || !m || !d) return '';
-  return `${String(d).padStart(2, '0')}/${MONTHS_ID[m - 1]}/${y}`;
-}
+  function formatDisplayDate(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-').map(Number);
+    if (!y || !m || !d) return '—';
+    return `${String(d).padStart(2,'0')}/${MONTHS_ID[m-1]}/${y}`;
+  }
 
-function parseDenda(val) {
-  if (!val || val === '—') return 0;
-  return parseInt(String(val).replace(/[^\d]/g, ''), 10) || 0;
-}
+  function parseDenda(val) {
+    if (!val || val === '—') return 0;
+    return parseInt(String(val).replace(/[^\d]/g, ''), 10) || 0;
+  }
 
-function formatRp(n) {
-  return 'Rp' + n.toLocaleString('id-ID');
-}
+  function formatRp(n) {
+    return 'Rp' + n.toLocaleString('id-ID');
+  }
 
-let reportRows = [];
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  }
 
-let currentDetailRow = null;
+  function csvEscape(val) {
+    const s = String(val ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  }
 
-function escHtml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-}
+  /* ── Server data ── */
+  const serverStats = @json($stats ?? []);
+  const serverRows  = @json($rows ?? []);
+  const listApiUrl  = @json(route('admin.laporan.list'));
 
-function statusBadgeHtml(status) {
-  const badges = {
+  /* ── 1. Doughnut Chart ── */
+  let summaryChartInstance = null;
+
+  function buildChart(stats) {
+    const ctx = document.getElementById('summaryChart');
+    if (!ctx) return;
+
+    const total       = Number(stats.total || 0);
+    const dikembalikan = Number(stats.dikembalikan || stats.selesai || 0);
+    const terlambat   = Number(stats.terlambat || 0);
+    const mengajukan  = Number(stats.mengajukan || 0);
+    const sedangDipinjam = Number(stats.sedang_dipinjam || 0);
+    const ditolak     = Number(stats.ditolak || 0);
+    const dibatalkan  = Number(stats.dibatalkan || 0);
+
+    const data   = [dikembalikan, terlambat, sedangDipinjam, mengajukan];
+    const labels = ['Dikembalikan','Terlambat','Sedang Dipinjam','Mengajukan'];
+    const colors = ['#10b981','#ef4444','#0ea5e9','#8b5cf6'];
+
+    if (ditolak > 0) { data.push(ditolak); labels.push('Ditolak'); colors.push('#f43f5e'); }
+    if (dibatalkan > 0) { data.push(dibatalkan); labels.push('Dibatalkan'); colors.push('#64748b'); }
+
+    // Center text
+    const centerEl = document.getElementById('chartCenterTotal');
+    if (centerEl) centerEl.textContent = total;
+
+    if (summaryChartInstance) summaryChartInstance.destroy();
+    summaryChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }],
+      },
+      options: {
+        cutout: '68%',
+        plugins: { legend: { display: false } },
+        maintainAspectRatio: true,
+      },
+    });
+
+    // Legend
+    const legend = document.getElementById('chartLegend');
+    if (legend) {
+      legend.innerHTML = labels.map((label, i) => {
+        const n = data[i];
+        const p = total ? ((n / total) * 100).toFixed(1) : '0';
+        return `<li class="flex items-center justify-between gap-2">
+          <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background:${colors[i]}"></span>${label}</span>
+          <span class="font-semibold text-slate-700">${n} <span class="text-slate-400 font-normal">(${p}%)</span></span>
+        </li>`;
+      }).join('');
+    }
+  }
+
+  buildChart(serverStats);
+
+  /* ── 2. Top fines sidebar ── */
+  function buildTopFines(rows) {
+    const list = document.getElementById('topFinesList');
+    if (!list) return;
+    const ranked = rows
+      .map(r => ({ member: r.member || '', amt: parseDenda(r.denda) }))
+      .filter(x => x.amt > 0)
+      .sort((a, b) => b.amt - a.amt)
+      .slice(0, 5);
+    if (!ranked.length) {
+      list.innerHTML = '<li class="text-sm text-slate-400">Belum ada denda tercatat</li>';
+      return;
+    }
+    list.innerHTML = ranked.map((item, i) => `
+      <li class="flex items-center justify-between gap-2">
+        <span class="flex items-center gap-2 text-sm text-slate-700">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#1E376E]/10 text-xs font-bold text-[#1E376E]">${i+1}</span>
+          ${escHtml(item.member)}
+        </span>
+        <span class="text-sm font-semibold text-red-600">${formatRp(item.amt)}</span>
+      </li>`).join('');
+  }
+
+  buildTopFines(serverRows);
+
+  /* ── 3. Status badges in table ── */
+  const BADGES = {
     Mengajukan: '<span class="inline-flex items-center gap-1 rounded-md bg-violet-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm whitespace-nowrap"><i class="bi bi-send-fill"></i> Mengajukan</span>',
     'Sedang Dipinjam': '<span class="inline-flex items-center gap-1 rounded-md bg-sky-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm whitespace-nowrap"><i class="bi bi-book-fill"></i> Sedang Dipinjam</span>',
     Terlambat: '<span class="inline-flex items-center gap-1 rounded-md bg-red-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm whitespace-nowrap"><i class="bi bi-exclamation-circle-fill"></i> Terlambat</span>',
@@ -338,306 +420,171 @@ function statusBadgeHtml(status) {
     Ditolak: '<span class="inline-flex items-center gap-1 rounded-md bg-rose-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm whitespace-nowrap"><i class="bi bi-x-circle-fill"></i> Ditolak</span>',
     Dibatalkan: '<span class="inline-flex items-center gap-1 rounded-md bg-slate-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm whitespace-nowrap"><i class="bi bi-slash-circle"></i> Dibatalkan</span>',
   };
-  return badges[status] || `<span class="inline-flex rounded-md bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-700">${escHtml(status)}</span>`;
-}
 
-function dendaCell(row) {
-  if (row.status === 'Mengajukan' || row.status === 'Ditolak' || row.status === 'Dibatalkan') {
-    return '<span class="text-xs text-slate-400">—</span>';
-  }
-  if (row.status === 'Sudah Lunas') {
-    return '<span class="font-semibold text-teal-600 text-xs">Rp0 <span class="text-[11px] font-normal text-slate-400">(lunas)</span></span>';
-  }
-  const hasFine = row.denda && row.denda !== 'Rp0' && row.denda !== '—';
-  const cls = (row.status === 'Terlambat' || (row.status === 'Dikembalikan' && hasFine))
-    ? 'font-semibold text-red-600 text-xs'
-    : 'font-semibold text-emerald-600 text-xs';
-  const extra = row.status === 'Terlambat' && row.telat ? `<span class="text-[11px] text-red-500 ml-1">(${escHtml(row.telat)})</span>` : '';
-  return `<span class="${cls}">${escHtml(row.denda || 'Rp0')}</span>${extra}`;
-}
-
-function dueDateCell(row) {
-  const du = formatDisplayDate(row.dueIso);
-  let note = '';
-  if (row.telatNote) note = `<p class="text-[11px] text-red-500">${escHtml(row.telatNote)}</p>`;
-  else if (row.dueNote) note = `<p class="text-[11px] text-emerald-600">${escHtml(row.dueNote)}</p>`;
-  return `<p class="text-xs text-slate-700 whitespace-nowrap">${escHtml(du)}</p>${note}`;
-}
-
-function memberInitials(name) {
-  const p = name.trim().split(/\s+/);
-  return p.length >= 2 ? (p[0][0] + p[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
-}
-
-function rowHtml(row, index) {
-  const br = formatDisplayDate(row.borrowIso);
-  return `
-    <tr class="hover:bg-slate-50/80 transition-colors">
-      <td class="px-3 py-2.5 text-slate-500 text-xs">${index}</td>
-      <td class="px-3 py-2.5">
-        <div class="flex items-center gap-2">
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1E376E]/10 text-[10px] font-bold text-[#1E376E]">${memberInitials(row.member)}</div>
-          <span class="font-medium text-slate-800 text-xs">${escHtml(row.member)}</span>
-        </div>
-      </td>
-      <td class="px-3 py-2.5">
-        <p class="font-medium text-slate-800 text-xs leading-tight">${escHtml(row.bookTitle)}</p>
-        <p class="text-[11px] text-slate-500">${escHtml(row.bookAuthor)}</p>
-      </td>
-      <td class="px-3 py-2.5 text-xs text-slate-700 whitespace-nowrap">${escHtml(br)}</td>
-      <td class="px-3 py-2.5">${dueDateCell(row)}</td>
-      <td class="px-3 py-2.5 text-center">${statusBadgeHtml(row.status)}</td>
-      <td class="px-3 py-2.5">${dendaCell(row)}</td>
-      <td class="px-3 py-2.5 text-center">
-        <button type="button" data-action="detail" data-report-id="${row.id}" class="report-action-btn inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-[#1E376E]">
-          <i class="bi bi-three-dots-vertical"></i>
-        </button>
-      </td>
-    </tr>`;
-}
-
-function updateStats(stats) {
-  const total = Number(stats?.total || 0) || 0;
-  const selesai = Number(stats?.selesai || 0) || 0;
-  const terlambat = Number(stats?.terlambat || 0) || 0;
-  const mengajukan = Number(stats?.mengajukan || 0) || 0;
-  const sedangDipinjam = Number(stats?.sedang_dipinjam || 0) || 0;
-  const ditolak = Number(stats?.ditolak || 0) || 0;
-  const dibatalkan = Number(stats?.dibatalkan || 0) || 0;
-  const totalDenda = Number(stats?.total_denda || 0) || 0;
-
-  const pct = (n) => (total ? ((n / total) * 100).toFixed(1) : '0');
-  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  set('statTotal', total);
-  set('statTotalTrend', 'Dari database');
-  set('statSelesai', selesai);
-  set('statSelesaiPct', `${pct(selesai)}% dari total`);
-  set('statTerlambat', terlambat);
-  set('statTerlambatPct', `${pct(terlambat)}% dari total`);
-  set('statDenda', formatRp(totalDenda));
-  set('statDendaNote', `${terlambat} pinjaman terlambat`);
-  set('chartCenterTotal', total);
-  updateChart({ selesai, terlambat, mengajukan, sedangDipinjam, ditolak, dibatalkan, total });
-}
-
-function updateChart(counts) {
-  const ctx = document.getElementById('summaryChart');
-  if (!ctx) return;
-  const { selesai, terlambat, mengajukan, sedangDipinjam, ditolak, dibatalkan, total } = counts;
-  const data = [selesai, terlambat, sedangDipinjam, mengajukan];
-  const labels = ['Selesai', 'Terlambat', 'Sedang Dipinjam', 'Mengajukan'];
-  const colors = ['#10b981', '#ef4444', '#0ea5e9', '#8b5cf6'];
-  if (ditolak > 0) {
-    data.push(ditolak);
-    labels.push('Ditolak');
-    colors.push('#f43f5e');
-  }
-  if (dibatalkan > 0) {
-    data.push(dibatalkan);
-    labels.push('Dibatalkan');
-    colors.push('#64748b');
-  }
-  if (summaryChartInstance) summaryChartInstance.destroy();
-  summaryChartInstance = new Chart(ctx, {
-    type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
-    options: {
-      cutout: '68%',
-      plugins: { legend: { display: false } },
-      maintainAspectRatio: true,
-    },
+  // Replace plain-text status cells with badges
+  document.querySelectorAll('tbody tr').forEach(tr => {
+    const statusTd = tr.querySelector('td:nth-child(6)');
+    if (!statusTd) return;
+    const txt = statusTd.textContent.trim();
+    if (BADGES[txt]) statusTd.innerHTML = BADGES[txt];
   });
-  const legend = document.getElementById('chartLegend');
-  if (legend) {
-    legend.innerHTML = labels.map((label, i) => {
-      const n = data[i];
-      const p = total ? ((n / total) * 100).toFixed(1) : 0;
-      return `<li class="flex items-center justify-between gap-2">
-        <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background:${colors[i]}"></span>${label}</span>
-        <span class="font-semibold text-slate-700">${n} <span class="text-slate-400 font-normal">(${p}%)</span></span>
-      </li>`;
-    }).join('');
+
+  /* ── 4. Detail modal ── */
+  function openDetail(rowData) {
+    const row = (typeof rowData === 'string') ? JSON.parse(rowData) : rowData;
+    document.getElementById('detailMember').value     = row.member || '';
+    document.getElementById('detailBookCode').value   = row.bookCode || '';
+    document.getElementById('detailBookTitle').value   = row.bookTitle || '';
+    document.getElementById('detailAuthor').value      = row.bookAuthor || '';
+    document.getElementById('detailCategory').value    = row.category || '';
+    const coverEl = document.getElementById('detailCover');
+    if (coverEl) { coverEl.src = row.cover || ''; coverEl.alt = row.bookTitle || ''; }
+    document.getElementById('detailStatus').value      = row.status || '';
+    document.getElementById('detailBorrowDisplay').value = row.borrowAt || formatDisplayDate(row.borrowIso);
+    document.getElementById('detailDueDisplay').value    = row.dueAt || formatDisplayDate(row.dueIso);
+    document.getElementById('detailTelat').value        = row.telat || '—';
+    document.getElementById('detailDenda').value        = row.denda || '—';
+    if (typeof fbShow === 'function') fbShow('reportDetailModal');
+    else document.getElementById('reportDetailModal')?.classList.remove('hidden');
   }
-}
 
-function updateTopFinesFromPageRows() {
-  const list = document.getElementById('topFinesList');
-  if (!list) return;
-  const ranked = [...reportRows]
-    .map((r) => ({ member: r.member, amt: parseDenda(r.denda) }))
-    .filter((x) => x.amt > 0)
-    .sort((a, b) => b.amt - a.amt)
-    .slice(0, 3);
-  if (!ranked.length) {
-    list.innerHTML = '<li class="text-sm text-slate-400">Belum ada denda tercatat</li>';
-    return;
+  function closeDetail() {
+    if (typeof fbHide === 'function') fbHide('reportDetailModal');
+    else document.getElementById('reportDetailModal')?.classList.add('hidden');
   }
-  list.innerHTML = ranked.map((item, i) => `
-    <li class="flex items-center justify-between gap-2">
-      <span class="flex items-center gap-2 text-sm text-slate-700">
-        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#1E376E]/10 text-xs font-bold text-[#1E376E]">${i + 1}</span>
-        ${escHtml(item.member)}
-      </span>
-      <span class="text-sm font-semibold text-red-600">${formatRp(item.amt)}</span>
-    </li>`).join('');
-}
 
-function renderPagination() {
-  const tbody = document.getElementById('reportTableBody');
-  const emptyMsg = document.getElementById('reportEmpty');
-  if (tbody) {
-    tbody.innerHTML = reportRows.map((r, i) => rowHtml(r, ((currentPage - 1) * ROWS_PER_PAGE) + i + 1)).join('');
-  }
-  if (emptyMsg) emptyMsg.classList.toggle('hidden', totalRows > 0);
-  const info = document.getElementById('paginationInfo');
-  if (info) {
-    if (!totalRows) info.textContent = 'Menampilkan 0 dari 0 data';
-    else {
-      const start = (currentPage - 1) * ROWS_PER_PAGE;
-      info.textContent = `Menampilkan ${start + 1} – ${Math.min(start + reportRows.length, totalRows)} dari ${totalRows} data`;
-    }
-  }
-  const pag = document.getElementById('paginationContainer');
-  if (!pag) return;
-  pag.innerHTML = '';
-  const addBtn = (label, page, active, disabled) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = label;
-    btn.disabled = disabled;
-    btn.className = `min-w-[2rem] rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${active ? 'bg-[#1E376E] text-white' : disabled ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`;
-    if (!disabled && page) btn.addEventListener('click', () => { currentPage = page; fetchReportRows(); });
-    pag.appendChild(btn);
-  };
-  addBtn('‹', currentPage - 1, false, currentPage <= 1);
-  for (let p = 1; p <= lastPage; p++) {
-    if (lastPage > 7 && p > 2 && p < lastPage - 1 && Math.abs(p - currentPage) > 1) {
-      if (p === 3 || p === lastPage - 2) {
-        const span = document.createElement('span');
-        span.className = 'px-1 text-slate-400';
-        span.textContent = '…';
-        pag.appendChild(span);
-      }
-      continue;
-    }
-    addBtn(String(p), p, p === currentPage, false);
-  }
-  addBtn('›', currentPage + 1, false, currentPage >= lastPage);
-}
-
-function resetFilters() {
-  document.getElementById('reportSearch').value = '';
-  document.getElementById('reportStatus').value = 'all';
-  document.getElementById('dateStart').value = '';
-  document.getElementById('dateEnd').value = '';
-  currentFilters = { q: '', status: 'all', start: '', end: '' };
-  currentPage = 1;
-  fetchReportRows();
-}
-
-function openDetail(id) {
-  const row = reportRows.find((r) => r.id === id);
-  if (!row) return;
-  currentDetailRow = row;
-  document.getElementById('detailMember').value = row.member;
-  document.getElementById('detailBookCode').value = row.bookCode;
-  document.getElementById('detailBookTitle').value = row.bookTitle;
-  document.getElementById('detailAuthor').value = row.bookAuthor;
-  document.getElementById('detailCategory').value = row.category;
-  document.getElementById('detailCover').src = row.cover;
-  document.getElementById('detailStatus').value = row.status;
-  document.getElementById('detailBorrowDisplay').value = formatDisplayDate(row.borrowIso);
-  document.getElementById('detailDueDisplay').value = formatDisplayDate(row.dueIso);
-  document.getElementById('detailTelat').value = row.telat || '—';
-  document.getElementById('detailDenda').value = row.denda || '—';
-  fbShow('reportDetailModal');
-}
-
-function closeDetail() {
-  currentDetailRow = null;
-  fbHide('reportDetailModal');
-}
-
-function csvEscape(val) {
-  const s = String(val ?? '');
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
-function exportAllExcel() {
-  const headers = ['No', 'Anggota', 'Buku', 'Tgl Pinjam', 'Tgl Kembali', 'Status', 'Denda'];
-  const lines = [headers.join(',')];
-  reportRows.forEach((row, i) => {
-    lines.push([i + 1, row.member, row.bookTitle, formatDisplayDate(row.borrowIso), formatDisplayDate(row.dueIso), row.status, row.denda].map(csvEscape).join(','));
+  // Wire detail buttons
+  document.querySelectorAll('.js-report-detail').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const raw = btn.getAttribute('data-row');
+      if (raw) openDetail(raw);
+    });
   });
-  const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `laporan-peminjaman-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-}
 
-function exportAllPdf() {
-  const rowsHtml = reportRows.map((row, i) => `<tr><td>${i+1}</td><td>${escHtml(row.member)}</td><td>${escHtml(row.bookTitle)}</td><td>${escHtml(formatDisplayDate(row.borrowIso))}</td><td>${escHtml(formatDisplayDate(row.dueIso))}</td><td>${escHtml(row.status)}</td><td>${escHtml(row.denda)}</td></tr>`).join('');
-  const w = window.open('', '_blank');
-  if (w) {
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Laporan</title><style>body{font-family:system-ui;padding:24px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e2e8f0;padding:8px;font-size:12px}th{background:#f1f5f9}</style></head><body><h1>Laporan Peminjaman</h1><table><thead><tr><th>No</th><th>Anggota</th><th>Buku</th><th>Pinjam</th><th>Kembali</th><th>Status</th><th>Denda</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`);
-    w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 300);
+  document.getElementById('reportDetailClose')?.addEventListener('click', closeDetail);
+  document.getElementById('detailBtnBack')?.addEventListener('click', closeDetail);
+
+  // Close modal when clicking backdrop
+  const modalEl = document.getElementById('reportDetailModal');
+  if (modalEl) {
+    modalEl.addEventListener('click', (e) => { if (e.target === modalEl) closeDetail(); });
   }
-}
 
-document.getElementById('reportTableBody').addEventListener('click', (e) => {
-  const btn = e.target.closest('.report-action-btn');
-  if (btn?.dataset.reportId) openDetail(btn.dataset.reportId);
-});
-document.getElementById('reportDetailClose').addEventListener('click', closeDetail);
-document.getElementById('detailBtnBack').addEventListener('click', closeDetail);
-document.getElementById('btnApplyFilter').addEventListener('click', () => {
-  currentFilters = {
-    q: (document.getElementById('reportSearch').value || '').trim(),
-    status: document.getElementById('reportStatus').value || 'all',
-    start: document.getElementById('dateStart').value || '',
-    end: document.getElementById('dateEnd').value || '',
-  };
-  currentPage = 1;
-  fetchReportRows();
-});
-document.getElementById('btnResetFilter').addEventListener('click', resetFilters);
-document.getElementById('exportAllPdfBtn').addEventListener('click', exportAllPdf);
-document.getElementById('exportAllExcelBtn').addEventListener('click', exportAllExcel);
+  // Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDetail();
+  });
 
-async function fetchReportRows() {
-  const params = new URLSearchParams();
-  if (currentFilters.q) params.set('q', currentFilters.q);
-  if (currentFilters.status && currentFilters.status !== 'all') params.set('status', currentFilters.status);
-  if (currentFilters.start) params.set('start', currentFilters.start);
-  if (currentFilters.end) params.set('end', currentFilters.end);
-  params.set('page', String(currentPage));
-  params.set('per_page', String(ROWS_PER_PAGE));
+  /* ── 5. Export (fetch ALL rows from API, then export) ── */
+  let allRowsCache = null;
 
-  const res = await fetch(`{{ route('admin.laporan.list') }}?${params.toString()}`, { headers: { Accept: "application/json" } });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(json?.message || 'Gagal memuat data laporan.');
+  async function fetchAllRows() {
+    if (allRowsCache) return allRowsCache;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      params.set('per_page', '10000');
+      params.set('page', '1');
+      const res = await fetch(`${listApiUrl}?${params.toString()}`, { headers: { Accept: 'application/json' } });
+      const json = await res.json();
+      allRowsCache = Array.isArray(json.data) ? json.data : serverRows;
+    } catch {
+      allRowsCache = serverRows;
+    }
+    return allRowsCache;
   }
-  reportRows = Array.isArray(json.data) ? json.data : [];
-  const meta = json.meta || {};
-  lastPage = Number(meta.last_page || 1) || 1;
-  totalRows = Number(meta.total || 0) || 0;
-  updateStats(json.stats || {});
-  updateTopFinesFromPageRows();
-  renderPagination();
-}
 
-(async function initReport() {
-  try {
-    await fetchReportRows();
-  } catch (e) {
-    reportRows = [];
-    alert(e?.message || 'Gagal memuat data laporan.');
+  // Export single detail as PDF
+  document.getElementById('exportPdfBtn')?.addEventListener('click', () => {
+    const fields = [
+      ['Nama Peminjam', document.getElementById('detailMember')?.value],
+      ['Kode Buku', document.getElementById('detailBookCode')?.value],
+      ['Judul Buku', document.getElementById('detailBookTitle')?.value],
+      ['Pengarang', document.getElementById('detailAuthor')?.value],
+      ['Kategori', document.getElementById('detailCategory')?.value],
+      ['Status', document.getElementById('detailStatus')?.value],
+      ['Tgl Peminjaman', document.getElementById('detailBorrowDisplay')?.value],
+      ['Tgl Kembali', document.getElementById('detailDueDisplay')?.value],
+      ['Keterlambatan', document.getElementById('detailTelat')?.value],
+      ['Denda', document.getElementById('detailDenda')?.value],
+    ];
+    const trHtml = fields.map(([l,v]) => `<tr><th style="text-align:left;padding:6px 10px;background:#f8fafc">${escHtml(l)}</th><td style="padding:6px 10px">${escHtml(v||'—')}</td></tr>`).join('');
+    const w = window.open('','_blank');
+    if (w) {
+      w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Detail Peminjaman</title><style>body{font-family:system-ui;padding:24px}table{border-collapse:collapse;width:100%;max-width:500px}th,td{border:1px solid #e2e8f0;font-size:13px}</style></head><body><h2>Detail Peminjaman</h2><table>${trHtml}</table></body></html>`);
+      w.document.close();
+      w.focus();
+      setTimeout(() => w.print(), 300);
+    }
+  });
+
+  // Export single detail as Excel/CSV
+  document.getElementById('exportExcelBtn')?.addEventListener('click', () => {
+    const fields = [
+      ['Nama Peminjam', document.getElementById('detailMember')?.value],
+      ['Kode Buku', document.getElementById('detailBookCode')?.value],
+      ['Judul Buku', document.getElementById('detailBookTitle')?.value],
+      ['Pengarang', document.getElementById('detailAuthor')?.value],
+      ['Kategori', document.getElementById('detailCategory')?.value],
+      ['Status', document.getElementById('detailStatus')?.value],
+      ['Tgl Peminjaman', document.getElementById('detailBorrowDisplay')?.value],
+      ['Tgl Kembali', document.getElementById('detailDueDisplay')?.value],
+      ['Keterlambatan', document.getElementById('detailTelat')?.value],
+      ['Denda', document.getElementById('detailDenda')?.value],
+    ];
+    const lines = fields.map(([l,v]) => [csvEscape(l), csvEscape(v||'—')].join(','));
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `detail-peminjaman-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  });
+
+  // Export ALL as PDF
+  document.getElementById('exportAllPdfBtn')?.addEventListener('click', async () => {
+    const rows = await fetchAllRows();
+    const trHtml = rows.map((row, i) => `<tr><td>${i+1}</td><td>${escHtml(row.member)}</td><td>${escHtml(row.bookTitle)}</td><td>${escHtml(row.borrowAt || formatDisplayDate(row.borrowIso))}</td><td>${escHtml(row.dueAt || formatDisplayDate(row.dueIso))}</td><td>${escHtml(row.status)}</td><td>${escHtml(row.denda)}</td></tr>`).join('');
+    const w = window.open('','_blank');
+    if (w) {
+      w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Laporan Peminjaman</title><style>body{font-family:system-ui;padding:24px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e2e8f0;padding:8px;font-size:12px}th{background:#f1f5f9}</style></head><body><h1>Laporan Peminjaman</h1><p style="color:#64748b;font-size:13px">Dicetak pada: ${new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})} — Total: ${rows.length} data</p><table><thead><tr><th>No</th><th>Anggota</th><th>Buku</th><th>Tgl Pinjam</th><th>Tgl Kembali</th><th>Status</th><th>Denda</th></tr></thead><tbody>${trHtml}</tbody></table></body></html>`);
+      w.document.close();
+      w.focus();
+      setTimeout(() => w.print(), 300);
+    }
+  });
+
+  // Export ALL as Excel/CSV
+  document.getElementById('exportAllExcelBtn')?.addEventListener('click', async () => {
+    const rows = await fetchAllRows();
+    const headers = ['No','Anggota','Buku','Tgl Pinjam','Tgl Kembali','Status','Denda'];
+    const lines = [headers.join(',')];
+    rows.forEach((row, i) => {
+      lines.push([i+1, row.member, row.bookTitle, row.borrowAt || formatDisplayDate(row.borrowIso), row.dueAt || formatDisplayDate(row.dueIso), row.status, row.denda].map(csvEscape).join(','));
+    });
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `laporan-peminjaman-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  });
+
+  /* ── 6. Dropdown toggles ── */
+  function setupDropdown(btnId, menuId) {
+    const btn = document.getElementById(btnId);
+    const menu = document.getElementById(menuId);
+    if (!btn || !menu) return;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menu.classList.toggle('hidden');
+    });
+    document.addEventListener('click', () => menu.classList.add('hidden'));
+    menu.addEventListener('click', () => menu.classList.add('hidden'));
   }
+  setupDropdown('exportAllDataBtn', 'exportAllDropdown');
+  setupDropdown('exportDataBtn', 'exportDropdown');
+
+  /* ── 7. Stat trend label ── */
+  const trendEl = document.getElementById('statTotalTrend');
+  if (trendEl) trendEl.textContent = 'Aktif saat ini';
 })();
-*/
 </script>
 @endpush

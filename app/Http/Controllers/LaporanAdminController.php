@@ -41,26 +41,35 @@ class LaporanAdminController extends Controller
             if (($row['status'] ?? '') === 'Terlambat' && ($row['telat'] ?? '') !== '') {
                 $row['telatNote'] = 'Telat '.$row['telat'];
             }
+            $row['borrowAt'] = $row['borrowIso'] ? \Carbon\Carbon::parse($row['borrowIso'])->translatedFormat('d/F/Y') : '—';
+            $row['dueAt']    = $row['dueIso'] ? \Carbon\Carbon::parse($row['dueIso'])->translatedFormat('d/F/Y') : '—';
             return $row;
         })->values();
+
 
         $all = $query->clone()->get()->map(function (DetailPeminjaman $d) {
             $row = $this->formatPeminjamanRow($d);
             if (($row['status'] ?? '') === 'Terlambat' && ($row['telat'] ?? '') !== '') {
                 $row['telatNote'] = 'Telat '.$row['telat'];
             }
+            $row['borrowAt'] = $row['borrowIso'] ? \Carbon\Carbon::parse($row['borrowIso'])->translatedFormat('d/F/Y') : '—';
+            $row['dueAt']    = $row['dueIso'] ? \Carbon\Carbon::parse($row['dueIso'])->translatedFormat('d/F/Y') : '—';
             return $row;
         })->values();
 
-        $total = $all->count();
-        $countByStatus = fn (string $s) => $all->where('status', $s)->count();
-        $selesai = $countByStatus('Sudah Lunas') + $countByStatus('Dikembalikan');
+        $allStats = DetailPeminjaman::all()->map(function (DetailPeminjaman $d) {
+            return $this->formatPeminjamanRow($d);
+        });
+
+        $total = $allStats->count();
+        $countByStatus = fn (string $s) => $allStats->where('status', $s)->count();
+        $dikembalikan = $countByStatus('Sudah Lunas') + $countByStatus('Dikembalikan');
         $terlambat = $countByStatus('Terlambat');
         $mengajukan = $countByStatus('Mengajukan');
         $sedangDipinjam = $countByStatus('Sedang Dipinjam');
         $ditolak = $countByStatus('Ditolak');
         $dibatalkan = $countByStatus('Dibatalkan');
-        $totalDenda = $all->reduce(function (int $sum, array $row) {
+        $totalDenda = $allStats->reduce(function (int $sum, array $row) {
             $raw = (string) ($row['denda'] ?? '');
             if ($raw === '' || $raw === '—') {
                 return $sum;
@@ -79,7 +88,8 @@ class LaporanAdminController extends Controller
             ],
             'stats' => [
                 'total' => $total,
-                'selesai' => $selesai,
+                'selesai' => $dikembalikan,
+                'dikembalikan' => $dikembalikan,
                 'terlambat' => $terlambat,
                 'mengajukan' => $mengajukan,
                 'sedang_dipinjam' => $sedangDipinjam,
@@ -104,8 +114,8 @@ class LaporanAdminController extends Controller
         if ($perPage < 1) {
             $perPage = 5;
         }
-        if ($perPage > 100) {
-            $perPage = 100;
+        if ($perPage > 10000) {
+            $perPage = 10000;
         }
         $page = (int) $request->input('page', 1);
         if ($page < 1) {
@@ -132,6 +142,9 @@ class LaporanAdminController extends Controller
                     $row['telatNote'] = 'Telat '.$row['telat'];
                 }
 
+                $row['borrowAt'] = $row['borrowIso'] ? \Carbon\Carbon::parse($row['borrowIso'])->translatedFormat('d/F/Y') : '—';
+                $row['dueAt']    = $row['dueIso'] ? \Carbon\Carbon::parse($row['dueIso'])->translatedFormat('d/F/Y') : '—';
+
                 return $row;
             })
             ->values();
@@ -144,14 +157,19 @@ class LaporanAdminController extends Controller
 
         $slice = $all->slice(($page - 1) * $perPage, $perPage)->values();
 
-        $countByStatus = fn (string $s) => $all->where('status', $s)->count();
-        $selesai = $countByStatus('Sudah Lunas') + $countByStatus('Dikembalikan');
-        $terlambat = $countByStatus('Terlambat');
-        $mengajukan = $countByStatus('Mengajukan');
-        $sedangDipinjam = $countByStatus('Sedang Dipinjam');
-        $ditolak = $countByStatus('Ditolak');
-        $dibatalkan = $countByStatus('Dibatalkan');
-        $totalDenda = $all->reduce(function (int $sum, array $row) {
+        $allStats = DetailPeminjaman::all()->map(function (DetailPeminjaman $d) {
+            return $this->formatPeminjamanRow($d);
+        });
+
+        $totalStats = $allStats->count();
+        $countByStatusStats = fn (string $s) => $allStats->where('status', $s)->count();
+        $dikembalikan = $countByStatusStats('Sudah Lunas') + $countByStatusStats('Dikembalikan');
+        $terlambat = $countByStatusStats('Terlambat');
+        $mengajukan = $countByStatusStats('Mengajukan');
+        $sedangDipinjam = $countByStatusStats('Sedang Dipinjam');
+        $ditolak = $countByStatusStats('Ditolak');
+        $dibatalkan = $countByStatusStats('Dibatalkan');
+        $totalDenda = $allStats->reduce(function (int $sum, array $row) {
             $raw = (string) ($row['denda'] ?? '');
             if ($raw === '' || $raw === '—') {
                 return $sum;
@@ -169,8 +187,9 @@ class LaporanAdminController extends Controller
                 'per_page' => $perPage,
             ],
             'stats' => [
-                'total' => $total,
-                'selesai' => $selesai,
+                'total' => $totalStats,
+                'selesai' => $dikembalikan,
+                'dikembalikan' => $dikembalikan,
                 'terlambat' => $terlambat,
                 'mengajukan' => $mengajukan,
                 'sedang_dipinjam' => $sedangDipinjam,

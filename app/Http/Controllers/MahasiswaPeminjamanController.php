@@ -171,26 +171,89 @@ class MahasiswaPeminjamanController extends Controller
                 : back()->with('error', $msg);
         }
 
-        $detail = DB::transaction(function () use ($userId, $kodeBuku) {
-            $now = now();
-            $jatuhTempo = $now->copy()->addDays(DetailPeminjaman::LOAN_DAYS);
+        $hasLateBook = DetailPeminjaman::query()
+            ->where('status_transaksi', DetailPeminjaman::STATUS_TERLAMBAT)
+            ->whereHas('peminjaman', fn ($q) => $q->where('id_user', $userId))
+            ->exists();
+
+        if ($hasLateBook) {
+            $msg = 'Anda memiliki buku yang terlambat dikembalikan. Harap kembalikan buku dan lunasi denda Anda terlebih dahulu.';
+            return $wantsJson
+                ? response()->json(['message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        $hasUnpaidFine = DetailPeminjaman::query()
+            ->where('status_transaksi', DetailPeminjaman::STATUS_DIKEMBALIKAN)
+            ->where('subtotal', '>', 0)
+            ->whereHas('peminjaman', fn ($q) => $q->where('id_user', $userId))
+            ->exists();
+
+        if ($hasUnpaidFine) {
+            $msg = 'Anda memiliki denda yang belum dibayar. Harap bayar denda Anda terlebih dahulu.';
+            return $wantsJson
+                ? response()->json(['message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        $activeCount = DetailPeminjaman::query()
+            ->whereIn('status_transaksi', [
+                DetailPeminjaman::STATUS_MENGAJUKAN,
+                DetailPeminjaman::STATUS_DIPINJAM,
+                DetailPeminjaman::STATUS_TERLAMBAT,
+            ])
+            ->whereHas('peminjaman', fn ($q) => $q->where('id_user', $userId))
+            ->count();
+
+        if ($activeCount >= 3) {
+            $msg = 'Batas maksimal peminjaman adalah 3 buku. Harap kembalikan buku yang sedang dipinjam terlebih dahulu.';
+            return $wantsJson
+                ? response()->json(['message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        $detail = DB::transaction(function () use ($userId, $kodeBuku, $request) {
+            $now        = now()->startOfDay();
+            $maxDueDays = 14;
+            $defaultDays = DetailPeminjaman::LOAN_DAYS;
+
+            // Tanggal pinjam dari request (default: hari ini)
+            $tglPinjam = $now->copy();
+            if ($request->filled('tgl_peminjaman')) {
+                $parsed = \Carbon\Carbon::createFromFormat('Y-m-d', $request->input('tgl_peminjaman'))->startOfDay();
+                // Izinkan hari ini atau setelahnya (mendatang)
+                if ($parsed->greaterThanOrEqualTo($now)) {
+                    $tglPinjam = $parsed;
+                }
+            }
+
+            // Tanggal kembali dari request (default: pinjam + 7 hari)
+            $tglKembali = $tglPinjam->copy()->addDays($defaultDays);
+            if ($request->filled('tgl_pengembalian')) {
+                $parsedDue = \Carbon\Carbon::createFromFormat('Y-m-d', $request->input('tgl_pengembalian'))->startOfDay();
+                $minDue = $tglPinjam->copy()->addDay();
+                $maxDue = $tglPinjam->copy()->addDays($maxDueDays);
+                if ($parsedDue->between($minDue, $maxDue)) {
+                    $tglKembali = $parsedDue;
+                }
+            }
 
             $header = Peminjaman::query()->create([
-                'id_user' => $userId,
-                'kode_buku' => $kodeBuku,
-                'tgl_Peminjaman' => $now,
-                'tgl_pengembalian' => $jatuhTempo,
-                'total_denda' => 0,
+                'id_user'          => $userId,
+                'kode_buku'        => $kodeBuku,
+                'tgl_Peminjaman'   => $tglPinjam,
+                'tgl_pengembalian' => $tglKembali,
+                'total_denda'      => 0,
             ]);
 
             return DetailPeminjaman::query()->create([
-                'kode_peminjaman' => $header->kode_peminjaman,
-                'kode_buku' => $kodeBuku,
+                'kode_peminjaman'  => $header->kode_peminjaman,
+                'kode_buku'        => $kodeBuku,
                 'status_transaksi' => DetailPeminjaman::STATUS_MENGAJUKAN,
-                'tgl_Peminjaman' => $now,
-                'tgl_pengembalian' => $jatuhTempo,
-                'jumlah_buku' => 1,
-                'subtotal' => 0,
+                'tgl_Peminjaman'   => $tglPinjam,
+                'tgl_pengembalian' => $tglKembali,
+                'jumlah_buku'      => 1,
+                'subtotal'         => 0,
             ]);
         });
 

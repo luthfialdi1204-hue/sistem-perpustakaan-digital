@@ -60,7 +60,34 @@ class KelolaAnggotaAdminController extends Controller
 
     public function index()
     {
-        return view('Admin.kelola_anggota_admin');
+        // 1. Total seluruh pengguna
+        $totalPengguna = User::count();
+
+        // 2. Jumlah mahasiswa (bukan admin)
+        $totalMahasiswa = User::where('role_user', User::ROLE_MAHASISWA)->count();
+
+        // 3. Jumlah admin
+        $totalAdmin = User::where('role_user', User::ROLE_ADMIN)->count();
+
+        // 4. Mahasiswa dengan NIM terdaftar
+        $mahasiswaTerdaftar = User::where('role_user', User::ROLE_MAHASISWA)
+            ->where('nim', '>', 0)
+            ->count();
+
+        // 5. Admin dengan NIP terdaftar
+        $adminTerdaftar = User::where('role_user', User::ROLE_ADMIN)
+            ->where('nip', '>', 0)
+            ->count();
+
+        $stats = [
+            'total_pengguna'      => $totalPengguna,
+            'total_mahasiswa'     => $totalMahasiswa,
+            'total_admin'         => $totalAdmin,
+            'mahasiswa_terdaftar' => $mahasiswaTerdaftar,
+            'admin_terdaftar'     => $adminTerdaftar,
+        ];
+
+        return view('Admin.kelola_anggota_admin', compact('stats'));
     }
 
     public function list(Request $request)

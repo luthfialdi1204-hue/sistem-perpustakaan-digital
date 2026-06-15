@@ -77,13 +77,11 @@
                 Lihat Detail
               </button>
               @if($available)
-                <form method="POST" action="{{ route('mahasiswa.peminjaman.store') }}">
-                  @csrf
-                  <input type="hidden" name="kode_buku" value="{{ $book['id'] ?? '' }}">
-                  <button type="submit" class="w-full rounded-lg bg-emerald-500 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">
-                    Pinjam Buku
-                  </button>
-                </form>
+                <button type="button"
+                  class="js-pinjam w-full rounded-lg bg-emerald-500 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+                  data-book='@json($book)'>
+                  <i class="bi bi-book me-1"></i> Pinjam Buku
+                </button>
               @else
                 <button type="button" disabled class="w-full cursor-not-allowed rounded-lg bg-amber-200 py-2 text-sm font-semibold text-amber-900">
                   Sedang Dipinjam
@@ -156,8 +154,97 @@
   </div>
 </div>
 
-<!-- MODAL PINJAM: removed (server-side form submit) -->
+<!-- MODAL PINJAM BUKU -->
+<div id="pinjamModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closePinjamModal()"></div>
+  <!-- Panel -->
+  <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden"
+       style="animation: slideUp .22s ease">
+    <!-- Header accent -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-[#1E376E] to-teal-500"></div>
+
+    <div class="px-6 pt-5 pb-6">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-[#1E376E]">Konfirmasi Peminjaman</h3>
+        <button type="button" onclick="closePinjamModal()" class="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
+      </div>
+
+      <!-- Book info -->
+      <div class="flex gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
+        <img id="pinjamCover" src="" alt=""
+          class="h-28 w-20 shrink-0 rounded-lg border border-slate-200 object-cover shadow-sm">
+        <div class="min-w-0 flex-1 space-y-1.5">
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Kode Buku</p>
+          <p id="pinjamCode" class="font-bold text-slate-800"></p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mt-2">Judul Buku</p>
+          <p id="pinjamTitle" class="text-sm font-semibold text-slate-700 leading-snug"></p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mt-1">Pengarang</p>
+          <p id="pinjamAuthor" class="text-sm text-slate-600"></p>
+        </div>
+      </div>
+
+      <!-- Dates & Fine -->
+      <div class="mt-4 grid grid-cols-2 gap-3">
+        <div>
+          <label class="mb-1 block text-xs font-semibold text-slate-500">Tanggal Peminjaman</label>
+          <input id="pinjamBorrowDate" type="date"
+            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-semibold text-slate-500">
+            Tanggal Kembali
+            <span id="pinjamDaysBadge" class="ml-1 rounded-full bg-[#1E376E]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#1E376E]"></span>
+          </label>
+          <input id="pinjamDueDate" type="date"
+            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
+          <p id="pinjamDuteHint" class="mt-0.5 text-[10px] text-slate-400">Maks. 14 hari dari tanggal pinjam</p>
+        </div>
+        <div class="col-span-2">
+          <label class="mb-1 block text-xs font-semibold text-slate-500">Denda Keterlambatan</label>
+          <div class="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            <i class="bi bi-exclamation-triangle-fill text-amber-500"></i>
+            <span class="text-sm font-semibold text-amber-700">Rp2.000 / hari</span>
+            <span class="text-xs text-amber-500 ml-auto">Berlaku setelah jatuh tempo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info note -->
+      <p class="mt-3 text-[11px] text-slate-400 flex items-start gap-1">
+        <i class="bi bi-info-circle mt-0.5 shrink-0"></i>
+        Pengajuan peminjaman akan diproses oleh admin. Buku akan tersedia setelah disetujui.
+      </p>
+
+      <!-- Buttons -->
+      <div class="mt-5 flex gap-3">
+        <button type="button" onclick="closePinjamModal()"
+          class="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-95">
+          Kembali
+        </button>
+        <form id="pinjamForm" method="POST" action="{{ route('mahasiswa.peminjaman.store') }}" class="flex-1">
+          @csrf
+          <input type="hidden" id="pinjamKodeBuku" name="kode_buku" value="">
+          <input type="hidden" id="pinjamBorrowHidden" name="tgl_peminjaman" value="">
+          <input type="hidden" id="pinjamDueHidden" name="tgl_pengembalian" value="">
+          <button type="submit"
+            class="w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 active:scale-95 flex items-center justify-center gap-1.5">
+            <i class="bi bi-book"></i> Pinjam
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 @endsection
+
+<style>
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(14px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+</style>
 
 @push('scripts')
 <script>
@@ -191,12 +278,120 @@ function closeModal() {
 
 window.closeModal = closeModal;
 
+const LOAN_DAYS    = 7;
+const MAX_LOAN_DAYS = 14;
+
+// Format ISO date (YYYY-MM-DD) from a Date object
+function toIso(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+// Update due-date constraints & badge whenever borrow date changes
+function recalcDueDate() {
+  const borrowEl = document.getElementById('pinjamBorrowDate');
+  const dueEl    = document.getElementById('pinjamDueDate');
+  const badge    = document.getElementById('pinjamDaysBadge');
+
+  if (!borrowEl.value) return;
+
+  const borrow = new Date(borrowEl.value + 'T00:00:00');
+  const minDue = new Date(borrow); minDue.setDate(minDue.getDate() + 1);
+  const maxDue = new Date(borrow); maxDue.setDate(maxDue.getDate() + MAX_LOAN_DAYS);
+  const defDue = new Date(borrow); defDue.setDate(defDue.getDate() + LOAN_DAYS);
+
+  dueEl.min = toIso(minDue);
+  dueEl.max = toIso(maxDue);
+
+  // If current due is out of range, reset to default
+  if (!dueEl.value || dueEl.value < toIso(minDue) || dueEl.value > toIso(maxDue)) {
+    dueEl.value = toIso(defDue);
+  }
+
+  // Update badge: show how many days
+  if (dueEl.value) {
+    const due    = new Date(dueEl.value + 'T00:00:00');
+    const days   = Math.round((due - borrow) / 86400000);
+    badge.textContent = `${days} hari`;
+  }
+
+  // Sync hidden fields
+  document.getElementById('pinjamBorrowHidden').value = borrowEl.value;
+  document.getElementById('pinjamDueHidden').value    = dueEl.value;
+}
+
+function openPinjamModal(book) {
+  if (!book) return;
+
+  const today  = new Date();
+  const todayIso = toIso(today);
+
+  const borrowEl = document.getElementById('pinjamBorrowDate');
+  const dueEl    = document.getElementById('pinjamDueDate');
+
+  // Constraints for borrow date: today onwards
+  borrowEl.min   = todayIso;
+  borrowEl.removeAttribute('max');
+  borrowEl.value = todayIso;
+
+  document.getElementById('pinjamCover').src  = book.img || '';
+  document.getElementById('pinjamCover').alt  = book.title || '';
+  document.getElementById('pinjamCode').textContent   = book.nomor_panggil || book.code || '—';
+  document.getElementById('pinjamTitle').textContent  = book.title  || '—';
+  document.getElementById('pinjamAuthor').textContent = book.author || '—';
+  document.getElementById('pinjamKodeBuku').value     = book.id     || '';
+
+  recalcDueDate();   // set due + badge + hidden fields
+
+  document.getElementById('pinjamModal').classList.remove('hidden');
+}
+
+function closePinjamModal() {
+  document.getElementById('pinjamModal').classList.add('hidden');
+}
+
+// Recalculate when user changes due date
+document.getElementById('pinjamDueDate').addEventListener('change', () => {
+  const borrowEl = document.getElementById('pinjamBorrowDate');
+  const dueEl    = document.getElementById('pinjamDueDate');
+  const badge    = document.getElementById('pinjamDaysBadge');
+
+  if (borrowEl.value && dueEl.value) {
+    const borrow = new Date(borrowEl.value + 'T00:00:00');
+    const due    = new Date(dueEl.value    + 'T00:00:00');
+    const days   = Math.round((due - borrow) / 86400000);
+    badge.textContent = `${days} hari`;
+    document.getElementById('pinjamDueHidden').value = dueEl.value;
+  }
+});
+
+// Recalculate when user changes borrow date
+document.getElementById('pinjamBorrowDate').addEventListener('change', recalcDueDate);
+
 document.addEventListener('click', (e) => {
+  const pinjamBtn = e.target.closest('.js-pinjam');
+  if (pinjamBtn) {
+    const raw = pinjamBtn.getAttribute('data-book') || 'null';
+    const book = JSON.parse(raw);
+    if (book) openPinjamModal(book);
+    return;
+  }
+
   const detailBtn = e.target.closest('.js-detail');
   if (!detailBtn) return;
   const raw = detailBtn.getAttribute('data-book') || 'null';
   const book = JSON.parse(raw);
   if (book) openModal(book);
+});
+
+document.getElementById('pinjamModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('pinjamModal')) closePinjamModal();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closePinjamModal();
+    closeModal();
+  }
 });
 
 detailModal.addEventListener('click', (e) => {

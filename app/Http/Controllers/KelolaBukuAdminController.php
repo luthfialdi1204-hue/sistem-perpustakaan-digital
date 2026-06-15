@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\FormatsBuku;
 use App\Models\Buku;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class KelolaBukuAdminController extends Controller
@@ -35,14 +36,42 @@ class KelolaBukuAdminController extends Controller
 
     public function index()
     {
-        return view('Admin.kelola_buku_admin');
+        // 1. Total semua buku
+        $totalBuku = Buku::count();
+
+        // 2. Total stok buku di perpustakaan
+        $totalStok = (int) Buku::sum('stok_buku');
+
+        // 3. Buku dengan stok habis
+        $bukuStokHabis = Buku::where('stok_buku', '<=', 0)->count();
+
+        // 4. Jumlah buku per kategori
+        $bukuPerKategori = Buku::select('kategori_buku', DB::raw('COUNT(*) as jumlah'))
+            ->groupBy('kategori_buku')
+            ->orderByDesc('jumlah')
+            ->get()
+            ->pluck('jumlah', 'kategori_buku')
+            ->toArray();
+
+        // 5. Jumlah kategori yang memiliki buku
+        $jumlahKategori = count($bukuPerKategori);
+
+        $stats = [
+            'total_buku'      => $totalBuku,
+            'total_stok'      => $totalStok,
+            'buku_stok_habis' => $bukuStokHabis,
+            'buku_per_kategori' => $bukuPerKategori,
+            'jumlah_kategori' => $jumlahKategori,
+        ];
+
+        return view('Admin.kelola_buku_admin', compact('stats'));
     }
 
     public function list(Request $request)
     {
-        $perPage = (int) $request->input('per_page', 6);
+        $perPage = (int) $request->input('per_page', 8);
         if ($perPage < 1) {
-            $perPage = 6;
+            $perPage = 8;
         }
         if ($perPage > 50) {
             $perPage = 50;

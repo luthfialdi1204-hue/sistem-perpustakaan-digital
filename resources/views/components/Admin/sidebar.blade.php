@@ -5,8 +5,11 @@
   $linkActive = $linkBase . ' bg-gradient-to-br from-brand-light to-teal-600 text-white shadow-[0_4px_12px_rgba(30,55,110,0.35)]';
 @endphp
 
-<aside class="fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-brand-dark via-brand to-indigo-900 text-white shadow-2xl">
-  <div class="border-b border-white/10 p-6 text-center">
+<aside id="adminSidebar" class="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full bg-gradient-to-b from-brand-dark via-brand to-indigo-900 text-white shadow-2xl transition-transform lg:translate-x-0">
+  <div class="border-b border-white/10 p-6 text-center relative">
+    <button id="sidebarClose" type="button" class="absolute right-4 top-4 text-white/70 hover:text-white lg:hidden">
+      <i class="bi bi-x-lg text-lg"></i>
+    </button>
     <div class="mb-2 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/10">
       <img src="{{ asset('images/poltek.png') }}" class="w-11 object-contain" alt="Logo">
     </div>

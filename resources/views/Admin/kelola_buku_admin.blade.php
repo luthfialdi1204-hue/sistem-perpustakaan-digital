@@ -150,7 +150,7 @@
     <div class="grid gap-x-6 gap-y-3 md:grid-cols-2">
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Nomor Panggil<span class="text-rose-500">*</span></label>
-        <input id="editCode" name="code" type="text" required maxlength="50" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Contoh: BK0001">
+        <input id="editCode" name="code" type="text" required maxlength="50" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">ISBN<span class="text-rose-500">*</span></label>
@@ -221,7 +221,7 @@
     <div class="grid gap-x-6 gap-y-3 md:grid-cols-2">
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">Nomor Panggil<span class="text-rose-500">*</span></label>
-        <input id="tambahCode" name="code" type="text" required maxlength="50" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Contoh: BK0001">
+        <input id="tambahCode" name="code" type="text" required maxlength="50" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
       </div>
       <div>
         <label class="mb-1 block text-xs font-semibold text-slate-600">ISBN</label>
@@ -288,7 +288,7 @@ window.KelolaBukuCfg = {
   showUrl: (id) => @json(url('/admin/buku')) + '/' + encodeURIComponent(id),
   storeUrl: @json(route('admin.buku.store')),
   defaultCover: @json(asset('images/' . rawurlencode('Cover buku 1.jpg'))),
-  perPage: 6,
+  perPage: 8,
 };
 </script>
 <script src="{{ asset('js/admin/kelola-buku.js') }}?v={{ filemtime(public_path('js/admin/kelola-buku.js')) }}"></script>

@@ -1,35 +1,47 @@
 <?php
 
+require __DIR__ . '/auth.php';
+
 use App\Http\Controllers\DashboardAdminController;
-use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\Halaman_Masuk;
 use App\Http\Controllers\KelolaAnggotaAdminController;
 use App\Http\Controllers\KelolaBukuAdminController;
 use App\Http\Controllers\KelolaPeminjamanAdminController;
 use App\Http\Controllers\Katalog_Buku;
 use App\Http\Controllers\LaporanAdminController;
 use App\Http\Controllers\MahasiswaPeminjamanController;
+use App\Http\Controllers\ProfilController;
 use Illuminate\Support\Facades\Route;
 
+
 Route::get('/', function () {
-    return view('Landing_Page');
+    $books = [];
+    $totalBooks = 0;
+    $totalUsers = 0;
+
+    try {
+        if (class_exists('App\Models\Buku') && \Illuminate\Support\Facades\Schema::hasTable('buku')) {
+            $books = App\Models\Buku::all()->map(function ($b) {
+                return (new class {
+                    use \App\Http\Controllers\Concerns\FormatsBuku;
+                    public function format($b) {
+                        return $this->formatBukuRow($b);
+                    }
+                })->format($b);
+            })->values()->toArray();
+            $totalBooks = count($books);
+        }
+
+        if (class_exists('App\Models\User') && \Illuminate\Support\Facades\Schema::hasTable('user')) {
+            $totalUsers = App\Models\User::where('role_user', App\Models\User::ROLE_MAHASISWA)->count();
+        }
+    } catch (\Throwable $e) {
+        $books = [];
+    }
+
+    return view('Landing_Page', compact('books', 'totalBooks', 'totalUsers'));
 })->name('landing');
 
-Route::get('/Halaman_Masuk', [Halaman_Masuk::class, 'showLoginForm'])->name('login.form');
-Route::post('/login/mahasiswa', [Halaman_Masuk::class, 'loginMahasiswa'])->name('login.mahasiswa');
-Route::post('/login/admin', [Halaman_Masuk::class, 'loginAdmin'])->name('login.admin');
 
-Route::middleware('guest')->group(function () {
-    Route::get('/lupa-password', [ForgotPasswordController::class, 'showForm'])->name('password.forgot');
-    Route::get('/lupa-password/verifikasi-otp', [ForgotPasswordController::class, 'showOtpForm'])->name('password.forgot.otp');
-    Route::get('/lupa-password/reset', [ForgotPasswordController::class, 'showResetForm'])->name('password.forgot.reset');
-    Route::post('/lupa-password/kirim-otp', [ForgotPasswordController::class, 'sendOtp'])->name('password.otp.send');
-    Route::post('/lupa-password/verifikasi-otp', [ForgotPasswordController::class, 'verifyOtp'])->name('password.otp.verify');
-    Route::post('/lupa-password/reset', [ForgotPasswordController::class, 'resetPassword'])->name('password.reset');
-});
-
-Route::post('/logout', [Halaman_Masuk::class, 'logout'])->middleware('auth')->name('logout');
-  
 Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     Route::get('/Beranda_Mahasiswa', [Katalog_Buku::class, 'beranda'])->name('mahasiswa.beranda');
     Route::get('/Katalog_Buku', [Katalog_Buku::class, 'index'])->name('mahasiswa.katalog');
@@ -39,12 +51,17 @@ Route::middleware(['auth', 'role:mahasiswa'])->group(function () {
     Route::get('/mahasiswa/peminjaman', [MahasiswaPeminjamanController::class, 'list'])->name('mahasiswa.peminjaman.list');
     Route::post('/mahasiswa/peminjaman', [MahasiswaPeminjamanController::class, 'store'])->name('mahasiswa.peminjaman.store');
     Route::patch('/mahasiswa/peminjaman/{id}/batal', [MahasiswaPeminjamanController::class, 'cancel'])->name('mahasiswa.peminjaman.cancel');
-    Route::view('/Profil_Mahasiswa', 'Mahasiswa.Profil_Mahasiswa')->name('mahasiswa.profil');
+
+    Route::get('/Profil_Mahasiswa', [ProfilController::class, 'mahasiswa'])->name('mahasiswa.profil');
+    Route::post('/profil/foto', [ProfilController::class, 'uploadFoto'])->name('mahasiswa.profil.foto');
+    Route::delete('/profil/foto', [ProfilController::class, 'hapusFoto'])->name('mahasiswa.profil.foto.hapus');
 });
+
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/Dashboard_Admin', [DashboardAdminController::class, 'index'])->name('admin.dashboard');
 
+    // Kelola Buku
     Route::get('/Kelola_Buku', [KelolaBukuAdminController::class, 'index'])->name('admin.buku.index');
     Route::get('/admin/buku', [KelolaBukuAdminController::class, 'list'])->name('admin.buku.list');
     Route::get('/admin/buku/{id}', [KelolaBukuAdminController::class, 'show'])->name('admin.buku.show');
@@ -52,6 +69,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::match(['put', 'patch'], '/admin/buku/{id}', [KelolaBukuAdminController::class, 'update'])->name('admin.buku.update');
     Route::delete('/admin/buku/{id}', [KelolaBukuAdminController::class, 'destroy'])->name('admin.buku.destroy');
 
+    // Kelola Anggota
     Route::get('/Kelola_Anggota', [KelolaAnggotaAdminController::class, 'index'])->name('admin.anggota.index');
     Route::get('/admin/anggota', [KelolaAnggotaAdminController::class, 'list'])->name('admin.anggota.list');
     Route::get('/admin/anggota/{id}', [KelolaAnggotaAdminController::class, 'show'])->name('admin.anggota.show');
@@ -59,12 +77,19 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::match(['put', 'patch'], '/admin/anggota/{id}', [KelolaAnggotaAdminController::class, 'update'])->name('admin.anggota.update');
     Route::delete('/admin/anggota/{id}', [KelolaAnggotaAdminController::class, 'destroy'])->name('admin.anggota.destroy');
 
+    // Kelola Peminjaman
     Route::get('/Kelola_Peminjaman', [KelolaPeminjamanAdminController::class, 'index'])->name('admin.peminjaman');
     Route::get('/admin/peminjaman', [KelolaPeminjamanAdminController::class, 'list'])->name('admin.peminjaman.list');
     Route::post('/admin/peminjaman/{id}/setujui', [KelolaPeminjamanAdminController::class, 'approve'])->name('admin.peminjaman.approve');
     Route::post('/admin/peminjaman/{id}/tolak', [KelolaPeminjamanAdminController::class, 'reject'])->name('admin.peminjaman.reject');
     Route::patch('/admin/peminjaman/{id}', [KelolaPeminjamanAdminController::class, 'update'])->name('admin.peminjaman.update');
+
+    // Laporan
     Route::get('/Laporan_Admin', [LaporanAdminController::class, 'index'])->name('admin.laporan');
     Route::get('/admin/laporan', [LaporanAdminController::class, 'list'])->name('admin.laporan.list');
-    Route::view('/Profil_Admin', 'Admin.Profil_Admin')->name('admin.profil');
+
+    // Profil Admin
+    Route::get('/Profil_Admin', [ProfilController::class, 'admin'])->name('admin.profil');
+    Route::post('/admin/profil/foto', [ProfilController::class, 'uploadFoto'])->name('admin.profil.foto');
+    Route::delete('/admin/profil/foto', [ProfilController::class, 'hapusFoto'])->name('admin.profil.foto.hapus');
 });
