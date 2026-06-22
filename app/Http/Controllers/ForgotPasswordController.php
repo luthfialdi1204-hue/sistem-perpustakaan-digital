@@ -3,13 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class ForgotPasswordController extends Controller
 {
+    protected OtpService $otpService;
+
+    public function __construct(OtpService $otpService)
+    {
+        $this->otpService = $otpService;
+    }
     public function showForm(Request $request)
     {
         $role = $request->query('role', 'mahasiswa');
@@ -27,21 +33,21 @@ class ForgotPasswordController extends Controller
     public function showOtpForm()
     {
         $state = session('forgot_password');
-        if (! $state || empty($state['otp'])) {
+        if (! $state || empty($state['identifier']) || empty($state['email'])) {
             return redirect()->route('password.forgot', ['role' => $state['role'] ?? 'mahasiswa'])
                 ->withErrors(['forgot' => 'Silakan kirim OTP terlebih dahulu.']);
         }
 
         $role = $state['role'] ?? 'mahasiswa';
 
-        return view('auth.Verifikasi_Otp', [
+        return view('auth.otp-verify', [
             'email' => $state['email'] ?? null,
             'identifier' => $state['identifier'] ?? '',
             'label' => $role === 'admin' ? 'NIP' : 'NIM',
             'role' => $role,
         ]);
     }
-
+    
     public function showResetForm()
     {
         $state = session('forgot_password');
@@ -93,43 +99,36 @@ class ForgotPasswordController extends Controller
             return back()->withErrors(['forgot' => 'Email akun tidak terdaftar. Hubungi admin.'])->withInput();
         }
 
-        $otp = (string) random_int(100000, 999999);
+        // Gunakan OtpService untuk generate dan kirim OTP (tipe: password_reset)
+        $result = $this->otpService->generateAndSend($identifier, $user->email, 'password_reset');
 
+        if (! $result['success']) {
+            if (isset($result['remaining_seconds'])) {
+                return back()->withErrors([
+                    'forgot' => $result['message'],
+                ])->withInput();
+            }
+
+            Log::error('Gagal kirim OTP: '.($result['error'] ?? $result['message'] ?? 'unknown'));
+
+            return back()->withErrors([
+                'forgot' => 'Gagal mengirim email OTP. Periksa konfigurasi mail server dan coba lagi.',
+            ])->withInput();
+        }
+
+        $successMessage = 'Kode OTP sudah dikirim ke email akun.';
+
+        // Simpan state forgot_password tanpa menyimpan kode OTP langsung
         session([
             'forgot_password' => [
                 'email' => $user->email,
-                'otp' => $otp,
                 'verified' => false,
                 'role' => $role,
                 'identifier' => $identifier,
                 'user_id' => $user->id_user,
-                'expires_at' => now()->addMinutes(5)->timestamp,
+                'expires_at' => $result['expires_at'] ?? now()->addMinutes(5)->toIso8601String(),
             ],
         ]);
-
-        try {
-            Mail::raw(
-                "Kode OTP reset password Anda adalah: {$otp}. Berlaku 5 menit.",
-                function ($message) use ($user) {
-                    $message->to($user->email)->subject('OTP Reset Password — Perpustakaan Digital');
-                }
-            );
-        } catch (\Throwable $e) {
-            Log::error('Gagal kirim OTP: '.$e->getMessage());
-
-            if (config('app.debug')) {
-                Log::info("OTP reset password ({$user->email}): {$otp}");
-            } else {
-                return back()->withErrors([
-                    'forgot' => 'Gagal mengirim email OTP. Periksa konfigurasi mail server.',
-                ])->withInput();
-            }
-        }
-
-        $successMessage = 'Kode OTP sudah dikirim ke email akun.';
-        if (config('app.debug') && config('mail.default') === 'log') {
-            $successMessage .= ' (Mode debug: cek file log untuk kode OTP.)';
-        }
 
         return redirect()->route('password.forgot.otp')->with('success', $successMessage);
     }
@@ -144,21 +143,25 @@ class ForgotPasswordController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+
         $state = session('forgot_password');
-        if (! $state || empty($state['email']) || empty($state['otp']) || empty($state['expires_at'])) {
+        if (! $state || empty($state['email']) || empty($state['identifier']) || empty($state['expires_at'])) {
             return redirect()->route('password.forgot', ['role' => $state['role'] ?? 'mahasiswa'])
                 ->withErrors(['forgot' => 'Silakan kirim OTP terlebih dahulu.']);
         }
 
-        if (now()->timestamp > (int) $state['expires_at']) {
-            session()->forget('forgot_password');
+        // Verifikasi menggunakan OtpService (tipe: password_reset)
+        $identifier = $state['identifier'];
+        $result = $this->otpService->verify($identifier, $request->otp, 'password_reset');
 
-            return redirect()->route('password.forgot', ['role' => $state['role'] ?? 'mahasiswa'])
-                ->withErrors(['forgot' => 'OTP sudah kadaluarsa. Silakan kirim ulang OTP.']);
-        }
+        if (! $result['success']) {
+            if (! empty($result['expired'])) {
+                session()->forget('forgot_password');
+                return redirect()->route('password.forgot', ['role' => $state['role'] ?? 'mahasiswa'])
+                    ->withErrors(['forgot' => 'OTP sudah kadaluarsa. Silakan kirim ulang OTP.']);
+            }
 
-        if ($request->otp !== $state['otp']) {
-            return back()->withErrors(['otp' => 'Kode OTP tidak valid.'])->withInput();
+            return back()->withErrors(['otp' => $result['message'] ?? 'Kode OTP tidak valid.'])->withInput();
         }
 
         $state['verified'] = true;

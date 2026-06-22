@@ -10,6 +10,7 @@ use App\Http\Controllers\Katalog_Buku;
 use App\Http\Controllers\LaporanAdminController;
 use App\Http\Controllers\MahasiswaPeminjamanController;
 use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\OtpController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -92,4 +93,27 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/Profil_Admin', [ProfilController::class, 'admin'])->name('admin.profil');
     Route::post('/admin/profil/foto', [ProfilController::class, 'uploadFoto'])->name('admin.profil.foto');
     Route::delete('/admin/profil/foto', [ProfilController::class, 'hapusFoto'])->name('admin.profil.foto.hapus');
+});
+
+Route::middleware('web')->group(function () {
+ 
+    // Tampilkan form verifikasi OTP
+    Route::get('/otp/verify', [OtpController::class, 'showVerificationForm'])
+        ->name('otp.verify.form');
+ 
+    // Kirim OTP ke email
+    Route::post('/otp/send', [OtpController::class, 'send'])
+        ->name('otp.send')
+        ->middleware('throttle:5,1'); // max 5 request per menit
+ 
+    // Verifikasi kode OTP
+    Route::post('/otp/verify', [OtpController::class, 'verify'])
+        ->name('otp.verify')
+        ->middleware('throttle:10,1'); // max 10 attempt per menit
+ 
+    // Kirim ulang OTP (AJAX)
+    Route::post('/otp/resend', [OtpController::class, 'resend'])
+        ->name('otp.resend')
+        ->middleware('throttle:3,1'); // max 3 resend per menit
+ 
 });
