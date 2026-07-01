@@ -41,7 +41,7 @@
       <a href="{{ route('password.forgot.otp') }}" class="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/20 px-4 py-2 text-sm text-white transition hover:bg-white/30">
         <i class="bi bi-arrow-left"></i> Kembali
       </a>
-      <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2 text-sm font-medium text-white shadow-lg transition hover:brightness-110">
+      <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-brand via-brand-light to-teal-600 px-5 py-2 text-sm font-medium text-white shadow-lg transition hover:brightness-105">
         <i class="bi bi-check2-circle"></i> Simpan
       </button>
     </div>

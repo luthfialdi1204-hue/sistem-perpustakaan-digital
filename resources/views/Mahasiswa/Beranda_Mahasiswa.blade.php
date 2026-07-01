@@ -92,7 +92,7 @@
 
     <div class="mt-6 flex justify-end border-t border-slate-100 pt-4">
       <button type="button" onclick="closeBookDetail()"
-        class="rounded-lg bg-slate-600 px-6 py-2 text-sm font-medium text-white hover:bg-slate-700 transition">
+        class="rounded-lg bg-[#1E376E] px-6 py-2 text-sm font-medium text-white hover:bg-[#162d5c] transition">
         Kembali
       </button>
     </div>

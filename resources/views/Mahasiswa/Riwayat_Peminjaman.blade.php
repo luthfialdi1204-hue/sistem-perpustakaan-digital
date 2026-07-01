@@ -94,7 +94,7 @@
         <label class="mb-1 block text-xs font-semibold text-slate-600">Pencarian</label>
         <div class="relative">
           <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input name="q" value="{{ $filters['q'] ?? '' }}" type="search" placeholder="Cari judul, pengarang, atau kode buku..."
+          <input name="q" value="{{ $filters['q'] ?? '' }}" type="search" placeholder="Cari judul, pengarang, atau nomor panggil..."
             class="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-[#1E376E] focus:outline-none focus:ring-2 focus:ring-[#1E376E]/20">
         </div>
       </div>
@@ -132,7 +132,7 @@
           <th class="px-3 py-2 whitespace-nowrap">Tgl Kembali</th>
           <th class="px-3 py-2 text-center whitespace-nowrap">Status</th>
           <th class="px-3 py-2 whitespace-nowrap">Denda</th>
-          <th class="px-3 py-2 min-w-[88px] text-center">Aksi</th>
+          <th class="px-3 py-2 min-w-[140px] text-center">Aksi</th>
         </tr>
       </thead>
       <tbody id="historyTableBody" class="divide-y divide-slate-100">
@@ -141,6 +141,17 @@
             $status = (string)($row['status'] ?? '');
             $canCancel = $status === 'Mengajukan';
             $isLate = $status === 'Terlambat';
+
+            $statusConfig = [
+                'Mengajukan' => ['bg' => 'bg-violet-500 text-white shadow-sm', 'icon' => 'bi-send-fill'],
+                'Sedang Dipinjam' => ['bg' => 'bg-sky-500 text-white shadow-sm', 'icon' => 'bi-book-fill'],
+                'Terlambat' => ['bg' => 'bg-red-500 text-white shadow-sm', 'icon' => 'bi-exclamation-circle-fill'],
+                'Dikembalikan' => ['bg' => 'bg-emerald-500 text-white shadow-sm', 'icon' => 'bi-box-arrow-in-left'],
+                'Sudah Lunas' => ['bg' => 'bg-teal-600 text-white shadow-sm', 'icon' => 'bi-cash-coin'],
+                'Ditolak' => ['bg' => 'bg-rose-500 text-white shadow-sm', 'icon' => 'bi-x-circle-fill'],
+                'Dibatalkan' => ['bg' => 'bg-slate-500 text-white shadow-sm', 'icon' => 'bi-slash-circle'],
+            ];
+            $cfg = $statusConfig[$status] ?? ['bg' => 'bg-slate-200 text-slate-700', 'icon' => ''];
           @endphp
           <tr class="group hover:bg-slate-50/80 transition-colors">
             <td class="px-3 py-2.5 align-middle">
@@ -164,7 +175,10 @@
               @endif
             </td>
             <td class="px-3 py-2.5 align-middle text-center">
-              <span class="inline-flex items-center gap-1 rounded-md bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-700 whitespace-nowrap">
+              <span class="inline-flex items-center gap-1 rounded-md {{ $cfg['bg'] }} px-2.5 py-1 text-[11px] font-bold whitespace-nowrap">
+                @if($cfg['icon'])
+                  <i class="bi {{ $cfg['icon'] }}"></i>
+                @endif
                 {{ $status ?: '—' }}
               </span>
             </td>
@@ -178,9 +192,10 @@
                   <i class="bi bi-eye text-sm"></i>
                 </button>
                 @if($canCancel)
-                  <button type="button" class="history-action-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:bg-rose-100"
+                  <button type="button" class="history-action-btn inline-flex h-8 px-2.5 items-center justify-center gap-1 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:bg-rose-100"
                     data-action="cancel" data-id="{{ $row['id'] ?? 0 }}" title="Batalkan pengajuan">
                     <i class="bi bi-x-circle text-sm"></i>
+                    <span class="text-xs font-semibold">Batalkan Saja</span>
                   </button>
                 @endif
               </div>
@@ -200,15 +215,33 @@
       $last = (int)($meta['last_page'] ?? 1);
     @endphp
     @if($last > 1)
-      <div class="flex items-center justify-center gap-1 text-sm">
-        <div class="inline-flex overflow-hidden rounded-lg border border-slate-200">
-          @for($p = 1; $p <= $last; $p++)
+      <div class="flex items-center justify-center gap-2 text-sm">
+        @if($current > 1)
+          <a href="{{ route('mahasiswa.riwayat', array_merge(request()->query(), ['page' => $current - 1])) }}"
+            class="flex items-center justify-center h-10 px-4 rounded-xl border border-slate-200 bg-white text-[#1E376E] font-semibold transition hover:bg-slate-50 shadow-sm text-xs gap-1">
+            ← Prev
+          </a>
+        @endif
+
+        @for($p = 1; $p <= $last; $p++)
+          @if($p === $current)
+            <span class="flex items-center justify-center h-10 w-10 rounded-xl bg-[#1E376E] text-white font-semibold shadow-sm text-xs">
+              {{ $p }}
+            </span>
+          @else
             <a href="{{ route('mahasiswa.riwayat', array_merge(request()->query(), ['page' => $p])) }}"
-              class="border-r border-slate-200 px-4 py-1.5 text-xs {{ $p === $current ? 'bg-[#1E376E] text-white' : 'bg-white text-slate-700 hover:bg-slate-50' }}">
+              class="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-[#1E376E] font-semibold transition hover:bg-slate-50 shadow-sm text-xs">
               {{ $p }}
             </a>
-          @endfor
-        </div>
+          @endif
+        @endfor
+
+        @if($current < $last)
+          <a href="{{ route('mahasiswa.riwayat', array_merge(request()->query(), ['page' => $current + 1])) }}"
+            class="flex items-center justify-center h-10 px-4 rounded-xl bg-[#1E376E] text-white font-semibold shadow-sm transition hover:bg-[#162d5c] text-xs gap-1">
+            Next →
+          </a>
+        @endif
       </div>
     @endif
   </div>
@@ -222,7 +255,7 @@
     <div class="grid grid-cols-1 gap-6 text-sm sm:grid-cols-2">
       <div class="space-y-3">
         <div>
-          <label class="mb-1 block text-xs font-medium text-slate-500">Kode Buku</label>
+          <label class="mb-1 block text-xs font-medium text-slate-500">Nomor Panggil</label>
           <input type="text" id="modalBookCode" readonly class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-800">
         </div>
         <div>
@@ -240,6 +273,14 @@
         <div>
           <label class="mb-1 block text-xs font-medium text-slate-500">Kategori</label>
           <input type="text" id="modalCategory" readonly class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-800">
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-slate-500">ISBN</label>
+          <input type="text" id="modalIsbn" readonly class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-800">
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-slate-500">Lokasi Rak</label>
+          <input type="text" id="modalRack" readonly class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-800">
         </div>
         <img id="modalCover" src="" alt="" class="mt-3 w-28 rounded-lg border border-slate-200 shadow-sm">
       </div>
@@ -272,10 +313,10 @@
     </div>
     <div class="mt-6 flex flex-wrap justify-end gap-2">
       <button type="button" id="modalCancelBtn" class="hidden rounded-lg border border-rose-200 bg-rose-50 px-5 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100">
-        <i class="bi bi-x-circle me-1"></i> Batalkan Pengajuan
+        <i class="bi bi-x-circle me-1"></i> Batalkan Saja
       </button>
       <button type="button" onclick="closeDetailModal()"
-        class="rounded-lg bg-slate-500 px-6 py-2 text-white transition hover:bg-slate-600">
+        class="rounded-lg bg-[#1E376E] px-6 py-2 text-white transition hover:bg-[#162d5c]">
         Kembali
       </button>
     </div>
@@ -340,12 +381,27 @@ document.addEventListener('click', (e) => {
   document.getElementById('modalPublisher').value = row.bookPublisher || row.publisher || '—';
   document.getElementById('modalAuthor').value = row.bookAuthor || '—';
   document.getElementById('modalCategory').value = row.bookCategory || row.category || '—';
+  document.getElementById('modalIsbn').value = row.isbn || '—';
+  document.getElementById('modalRack').value = row.rack || '—';
   document.getElementById('modalYearPublished').value = row.bookYear || row.yearPublished || '—';
   document.getElementById('modalBorrowDate').value = row.borrowAt || '—';
   document.getElementById('modalDueDate').value = row.dueAt || '—';
   document.getElementById('modalTelat').value = row.telat || '—';
   document.getElementById('modalDenda').value = row.denda || '—';
-  document.getElementById('modalStatusBadge').textContent = row.status || '—';
+  document.getElementById('modalStatusBadge').innerHTML = statusBadgeHtml(row.status);
+
+  const cancelBtn = document.getElementById('modalCancelBtn');
+  if (row.status === 'Mengajukan') {
+    cancelBtn.classList.remove('hidden');
+    cancelBtn.onclick = () => {
+      fbHide('detailModal');
+      openCancelConfirm(row.id);
+    };
+  } else {
+    cancelBtn.classList.add('hidden');
+    cancelBtn.onclick = null;
+  }
+
   const cover = document.getElementById('modalCover');
   cover.src = row.cover || '';
   cover.alt = row.bookTitle || '';
@@ -540,8 +596,9 @@ function actionCell(row) {
       <div class="flex items-center justify-center gap-1.5">
         ${detailBtn}
         <button type="button" title="Batalkan pengajuan" data-action="cancel" data-id="${row.id}"
-          class="history-action-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:bg-rose-100">
+          class="history-action-btn inline-flex h-8 px-2.5 items-center justify-center gap-1 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:bg-rose-100">
           <i class="bi bi-x-circle text-sm"></i>
+          <span class="text-xs font-semibold">Batalkan Saja</span>
         </button>
       </div>`;
   }
@@ -573,12 +630,24 @@ function renderPagination() {
   paginationEl.innerHTML = '';
   if (lastPage <= 1) return;
 
+  paginationEl.className = 'flex items-center justify-center gap-2 text-sm';
+
   const addBtn = (label, page, active, disabled) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.textContent = label;
+    btn.textContent = label === '‹' ? '← Prev' : label === '›' ? 'Next →' : label;
     btn.disabled = disabled;
-    btn.className = `min-w-[2rem] rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${active ? 'bg-[#1E376E] text-white' : disabled ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`;
+    
+    const isArrow = label === '‹' || label === '›';
+    const baseClass = "flex items-center justify-center text-xs font-semibold shadow-sm transition h-10 rounded-xl";
+    if (active) {
+      btn.className = `${baseClass} w-10 bg-[#1E376E] text-white`;
+    } else if (disabled) {
+      btn.className = `${baseClass} ${isArrow ? 'px-4' : 'w-10'} bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200`;
+    } else {
+      btn.className = `${baseClass} ${isArrow ? 'px-4 bg-[#1E376E] text-white hover:bg-[#162d5c]' : 'w-10 bg-white text-[#1E376E] border border-slate-200 hover:bg-slate-50'}`;
+    }
+
     if (!disabled && page) btn.addEventListener('click', () => { currentPage = page; loadHistory().catch((e) => alert(e.message)); });
     paginationEl.appendChild(btn);
   };
@@ -588,7 +657,7 @@ function renderPagination() {
     if (lastPage > 7 && p > 2 && p < lastPage - 1 && Math.abs(p - currentPage) > 1) {
       if (p === 3 || p === lastPage - 2) {
         const span = document.createElement('span');
-        span.className = 'px-1 text-slate-400';
+        span.className = 'px-1 text-slate-400 flex items-center justify-center h-10';
         span.textContent = '…';
         paginationEl.appendChild(span);
       }

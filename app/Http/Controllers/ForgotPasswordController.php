@@ -111,6 +111,22 @@ class ForgotPasswordController extends Controller
 
             Log::error('Gagal kirim OTP: '.($result['error'] ?? $result['message'] ?? 'unknown'));
 
+            if (config('app.env') === 'local' && !empty($result['local_code'])) {
+                session([
+                    'forgot_password' => [
+                        'email' => $user->email,
+                        'verified' => false,
+                        'role' => $role,
+                        'identifier' => $identifier,
+                        'user_id' => $user->id_user,
+                        'expires_at' => now()->addMinutes(5)->toIso8601String(),
+                    ],
+                ]);
+
+                return redirect()->route('password.forgot.otp')
+                    ->with('success', 'Gagal mengirim email asli. (Mode Lokal: Gunakan kode OTP: ' . $result['local_code'] . ')');
+            }
+
             return back()->withErrors([
                 'forgot' => 'Gagal mengirim email OTP. Periksa konfigurasi mail server dan coba lagi.',
             ])->withInput();

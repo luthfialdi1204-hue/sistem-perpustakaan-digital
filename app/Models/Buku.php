@@ -5,28 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Buku extends Model
-{
-    public const KATEGORI_FIKSI = 'Fiksi';
-
-    public const KATEGORI_PENDIDIKAN = 'Pendidikan';
-
-    public const KATEGORI_BISNIS = 'Bisnis';
-
-    public const KATEGORI_TEKNOLOGI = 'Teknologi';
-
-    public const KATEGORI_AGAMA = 'Agama';
-
-    /** @return list<string> */
-    public static function kategoriList(): array
     {
-        return [
-            self::KATEGORI_FIKSI,
-            self::KATEGORI_PENDIDIKAN,
-            self::KATEGORI_BISNIS,
-            self::KATEGORI_TEKNOLOGI,
-            self::KATEGORI_AGAMA,
-        ];
-    }
+        public const KATEGORI_FIKSI = 'Fiksi';
+
+        public const KATEGORI_PENDIDIKAN = 'Pendidikan';
+
+        public const KATEGORI_BISNIS = 'Bisnis';
+
+        public const KATEGORI_TEKNOLOGI = 'Teknologi';
+
+        public const KATEGORI_AGAMA = 'Agama';
+
+        /** @return list<string> */
+        public static function kategoriList(): array
+        {
+            return [
+                self::KATEGORI_FIKSI,
+                self::KATEGORI_PENDIDIKAN,
+                self::KATEGORI_BISNIS,
+                self::KATEGORI_TEKNOLOGI,
+                self::KATEGORI_AGAMA,
+            ];
+        }
 
     public static function isValidKategori(string $kategori): bool
     {
@@ -42,7 +42,7 @@ class Buku extends Model
     public $incrementing = true;
 
     public $timestamps = false;
-
+   
     protected $guarded = [];
 
     protected function casts(): array

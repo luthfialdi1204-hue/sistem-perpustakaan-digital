@@ -13,10 +13,14 @@
 <style>
   html { scroll-behavior: smooth; }
   section { scroll-margin-top: 80px; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(14px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0)   scale(1);    }
+  }
 </style>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-slate-100 font-sans antialiased">
 
 <!-- NAVBAR -->
 <nav id="navbar" class="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-[#152a52] to-[#1E376E] shadow-lg">
@@ -164,25 +168,56 @@
 </section>
  
 <!-- MODAL -->
-<div id="detailModal" tabindex="-1" class="hidden fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50">
-  <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full p-5 relative">
+<div id="detailModal" tabindex="-1" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeDetailModal()"></div>
+  <!-- Panel -->
+  <div class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden" style="animation: slideUp .22s ease">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+      <h3 class="text-lg font-bold text-slate-800">Detail Buku</h3>
+      <button onclick="closeDetailModal()" class="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
+    </div>
 
-    <button data-modal-hide="detailModal" class="absolute top-2 right-2">✖</button>
+    <!-- Content -->
+    <div class="px-6 py-5">
+      <div class="grid md:grid-cols-12 gap-6 items-start">
+        <!-- Image Cover -->
+        <div class="md:col-span-5 flex justify-center">
+          <img id="modal-img" class="w-full max-w-[200px] md:max-w-none rounded-xl border border-slate-200 object-cover shadow-md">
+        </div>
 
-    <h5 class="text-lg font-bold mb-4">Detail Buku</h5>
-
-    <div class="grid md:grid-cols-2 gap-4">
-      <img id="modal-img" class="w-full rounded">
-
-      <div>
-        <h5 id="modal-title" class="font-bold"></h5>
-        <p><b>Pengarang:</b> <span id="modal-author"></span></p>
-        <p><b>Penerbit:</b> <span id="modal-publisher"></span></p>
-        <p><b>Tahun:</b> <span id="modal-year"></span></p>
-        <p><b>Deskripsi:</b> <span id="modal-desc"></span></p>
+        <!-- Details -->
+        <div class="md:col-span-7 space-y-2.5 text-sm text-slate-700">
+          <h4 id="modal-title" class="text-lg font-bold text-slate-800 leading-tight mb-2"></h4>
+          <p><span class="font-semibold text-slate-500">Nomor Panggil:</span> <span id="modal-code" class="text-slate-800"></span></p>
+          <p><span class="font-semibold text-slate-500">Pengarang:</span> <span id="modal-author" class="text-slate-800"></span></p>
+          <p><span class="font-semibold text-slate-500">Penerbit:</span> <span id="modal-publisher" class="text-slate-800"></span></p>
+          <p><span class="font-semibold text-slate-500">Tahun Terbit:</span> <span id="modal-year" class="text-slate-800"></span></p>
+          <p class="flex items-center gap-1.5">
+            <span class="font-semibold text-slate-500">Kategori:</span>
+            <span id="modal-category" class="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700"></span>
+          </p>
+          <p class="flex items-center gap-1.5">
+            <span class="font-semibold text-slate-500">Ketersediaan:</span>
+            <span id="modal-stock" class="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"></span>
+          </p>
+          <p><span class="font-semibold text-slate-500">Lokasi Rak:</span> <span id="modal-rack" class="text-slate-800"></span></p>
+          <p><span class="font-semibold text-slate-500">ISBN:</span> <span id="modal-isbn" class="text-slate-800"></span></p>
+          <div class="pt-1">
+            <p class="font-semibold text-slate-800 mb-1">Deskripsi</p>
+            <p id="modal-desc" class="text-xs text-slate-500 leading-relaxed"></p>
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end">
+      <button onclick="closeDetailModal()" class="px-6 py-2 rounded-lg bg-[#1E376E] text-white hover:bg-[#162d5c] text-sm font-semibold transition shadow-sm active:scale-95">
+        Kembali
+      </button>
+    </div>
   </div>
 </div>
 
@@ -267,13 +302,23 @@ function createCard(book){
   const publisher = escHtml(book.publisher);
   const year = escHtml(book.year);
   const desc = escHtml(book.description);
+  const code = escHtml(book.code);
+  const category = escHtml(book.category);
+  const rack = escHtml(book.rack);
+  const isbn = escHtml(book.isbn);
+  const stock = book.stock;
 
   return `
-    <div class="bg-white rounded-xl shadow-md p-4 flex flex-col hover:shadow-xl hover:-translate-y-1 transition duration-300">
-      <div class="overflow-hidden rounded-lg">
-        <img src="${img}" class="w-full h-56 object-cover hover:scale-105 transition duration-300" alt="${title}">
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col items-center justify-between text-center hover:shadow-xl hover:-translate-y-1 transition duration-300">
+      <div class="overflow-hidden rounded-xl w-full">
+        <img src="${img}" class="w-full h-44 object-cover hover:scale-105 transition duration-300" alt="${title}">
       </div>
-      <h6 class="mt-3 font-semibold text-[#1E376E] text-sm truncate text-left" title="${title}">${title}</h6>
+      <div class="p-1 w-full text-center flex flex-col items-center gap-1 mt-2.5">
+        <h6 class="font-bold text-[#1E376E] text-sm truncate w-full" title="${title}">${title}</h6>
+        <p class="text-xs text-slate-500">${author}</p>
+        <p class="text-xs text-slate-500">${category}</p>
+        <p class="text-xs text-slate-500">${stock > 0 ? stock + ' tersedia' : 'Dipinjam semua'}</p>
+      </div>
       <button 
         onclick="showDetail(this)"
         data-title="${title}"
@@ -282,10 +327,13 @@ function createCard(book){
         data-year="${year}"
         data-desc="${desc}"
         data-img="${img}"
-        data-modal-target="detailModal"
-        data-modal-toggle="detailModal"
-        class="mt-3 w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 rounded-lg text-sm hover:opacity-90 transition shadow-sm">
-        Detail
+        data-code="${code}"
+        data-category="${category}"
+        data-rack="${rack}"
+        data-isbn="${isbn}"
+        data-stock="${stock}"
+        class="mt-3.5 w-full rounded-xl bg-[#1E376E] py-2.5 text-xs font-semibold text-white transition hover:bg-[#162d5c] shadow-sm">
+        Lihat Detail
       </button>
     </div>
   `;
@@ -306,7 +354,8 @@ function renderPagination(totalBooks, perPage, page) {
   // Previous button (only if not on first page)
   if (page > 1) {
     html += `
-      <button onclick="loadPage(${page - 1})" class="px-4 py-2 bg-white text-blue-600 rounded-lg shadow hover:bg-slate-50 transition">
+      <button onclick="loadPage(${page - 1})"
+        class="flex items-center justify-center h-10 px-4 rounded-xl border border-slate-200 bg-white text-[#1E376E] font-semibold transition hover:bg-slate-50 shadow-sm text-xs gap-1">
         ← Prev
       </button>
     `;
@@ -314,14 +363,18 @@ function renderPagination(totalBooks, perPage, page) {
 
   // Page numbers
   for (let i = 1; i <= totalPages; i++) {
-    const activeClass = i === page ? "bg-blue-600 text-white" : "bg-white text-blue-600 hover:bg-slate-50";
-    html += `<button onclick="loadPage(${i})" class="px-4 py-2 ${activeClass} rounded-lg shadow font-semibold transition">${i}</button>`;
+    if (i === page) {
+      html += `<span class="flex items-center justify-center h-10 w-10 rounded-xl bg-[#1E376E] text-white font-semibold shadow-sm text-xs">${i}</span>`;
+    } else {
+      html += `<button onclick="loadPage(${i})" class="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-[#1E376E] font-semibold transition hover:bg-slate-50 shadow-sm text-xs">${i}</button>`;
+    }
   }
 
   // Next button
   if (page < totalPages) {
     html += `
-      <button onclick="loadPage(${page + 1})" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+      <button onclick="loadPage(${page + 1})"
+        class="flex items-center justify-center h-10 px-4 rounded-xl bg-[#1E376E] text-white font-semibold shadow-sm transition hover:bg-[#162d5c] text-xs gap-1">
         Next →
       </button>
     `;
@@ -366,7 +419,27 @@ function showDetail(btn){
   document.getElementById("modal-year").innerText = btn.dataset.year;
   document.getElementById("modal-desc").innerText = btn.dataset.desc;
   document.getElementById("modal-img").src = btn.dataset.img;
+  
+  document.getElementById("modal-code").innerText = btn.dataset.code || '-';
+  document.getElementById("modal-category").innerText = btn.dataset.category || '-';
+  document.getElementById("modal-rack").innerText = btn.dataset.rack || '-';
+  document.getElementById("modal-isbn").innerText = btn.dataset.isbn || '-';
+  
+  const stock = Number(btn.dataset.stock) || 0;
+  const stockEl = document.getElementById("modal-stock");
+  stockEl.innerText = stock > 0 ? `${stock} tersedia` : 'Dipinjam semua';
+  stockEl.className = `inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold text-white ` + (stock > 0 ? 'bg-emerald-500' : 'bg-amber-500');
+
+  document.getElementById("detailModal").classList.remove("hidden");
 }
+
+function closeDetailModal() {
+  document.getElementById("detailModal").classList.add("hidden");
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeDetailModal();
+});
 
 document.getElementById("year").textContent = new Date().getFullYear();
 loadPage(1);

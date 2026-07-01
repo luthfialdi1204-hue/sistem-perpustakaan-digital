@@ -84,12 +84,15 @@ class OtpService
                 Mail::to($email)->send(new OtpMail($code, self::OTP_EXPIRY_MINUTES));
             }
         } catch (\Exception $e) {
-            // Hapus record jika gagal kirim email
-            $otpRecord->delete();
+            // Hapus record jika gagal kirim email (kecuali di mode lokal/dev)
+            if (config('app.env') !== 'local') {
+                $otpRecord->delete();
+            }
             return [
                 'success' => false,
                 'message' => 'Gagal mengirim email OTP. Silakan coba lagi.',
                 'error'   => $e->getMessage(),
+                'local_code' => config('app.env') === 'local' ? $code : null,
             ];
         }
 

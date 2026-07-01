@@ -72,18 +72,18 @@
             <p class="text-sm text-slate-500">{{ $book['stockLabel'] ?? '' }}</p>
             <div class="mt-3 space-y-2">
               <button type="button"
-                class="js-detail w-full rounded-lg bg-[#1E376E] py-2 text-sm font-semibold text-white transition hover:bg-[#162d5c]"
+                class="js-detail w-full rounded-xl bg-[#1E376E] py-2.5 text-sm font-semibold text-white transition hover:bg-[#162d5c]"
                 data-book='@json($book)'>
                 Lihat Detail
               </button>
               @if($available)
                 <button type="button"
-                  class="js-pinjam w-full rounded-lg bg-emerald-500 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+                  class="js-pinjam w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600"
                   data-book='@json($book)'>
-                  <i class="bi bi-book me-1"></i> Pinjam Buku
+                  Pinjam Buku
                 </button>
               @else
-                <button type="button" disabled class="w-full cursor-not-allowed rounded-lg bg-amber-200 py-2 text-sm font-semibold text-amber-900">
+                <button type="button" disabled class="w-full cursor-not-allowed rounded-xl bg-amber-200 py-2.5 text-sm font-semibold text-amber-900">
                   Sedang Dipinjam
                 </button>
               @endif
@@ -98,15 +98,33 @@
       $last = (int) ($meta['last_page'] ?? 1);
     @endphp
     @if($last > 1)
-      <div class="mt-6 flex justify-center">
-        <div class="inline-flex overflow-hidden rounded-lg border border-slate-200">
-          @for($p = 1; $p <= $last; $p++)
+      <div class="mt-6 flex justify-center items-center gap-2">
+        @if($current > 1)
+          <a href="{{ route('mahasiswa.katalog', array_merge(request()->query(), ['page' => $current - 1])) }}"
+            class="flex items-center justify-center h-10 px-4 rounded-xl border border-slate-200 bg-white text-[#1E376E] font-semibold transition hover:bg-slate-50 shadow-sm text-xs gap-1">
+            ← Prev
+          </a>
+        @endif
+
+        @for($p = 1; $p <= $last; $p++)
+          @if($p === $current)
+            <span class="flex items-center justify-center h-10 w-10 rounded-xl bg-[#1E376E] text-white font-semibold shadow-sm text-xs">
+              {{ $p }}
+            </span>
+          @else
             <a href="{{ route('mahasiswa.katalog', array_merge(request()->query(), ['page' => $p])) }}"
-              class="border-r border-slate-200 px-4 py-1.5 text-xs {{ $p === $current ? 'bg-[#1E376E] text-white' : 'bg-white text-slate-700 hover:bg-slate-50' }}">
+              class="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-[#1E376E] font-semibold transition hover:bg-slate-50 shadow-sm text-xs">
               {{ $p }}
             </a>
-          @endfor
-        </div>
+          @endif
+        @endfor
+
+        @if($current < $last)
+          <a href="{{ route('mahasiswa.katalog', array_merge(request()->query(), ['page' => $current + 1])) }}"
+            class="flex items-center justify-center h-10 px-4 rounded-xl bg-[#1E376E] text-white font-semibold shadow-sm transition hover:bg-[#162d5c] text-xs gap-1">
+            Next →
+          </a>
+        @endif
       </div>
     @endif
   </div>
@@ -175,12 +193,16 @@
         <img id="pinjamCover" src="" alt=""
           class="h-28 w-20 shrink-0 rounded-lg border border-slate-200 object-cover shadow-sm">
         <div class="min-w-0 flex-1 space-y-1.5">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Kode Buku</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Nomor Panggil</p>
           <p id="pinjamCode" class="font-bold text-slate-800"></p>
           <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mt-2">Judul Buku</p>
           <p id="pinjamTitle" class="text-sm font-semibold text-slate-700 leading-snug"></p>
           <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mt-1">Pengarang</p>
           <p id="pinjamAuthor" class="text-sm text-slate-600"></p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mt-1">ISBN</p>
+          <p id="pinjamIsbn" class="text-sm text-slate-600"></p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mt-1">Lokasi Rak</p>
+          <p id="pinjamRack" class="text-sm text-slate-600"></p>
         </div>
       </div>
 
@@ -219,7 +241,7 @@
       <!-- Buttons -->
       <div class="mt-5 flex gap-3">
         <button type="button" onclick="closePinjamModal()"
-          class="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-95">
+          class="flex-1 h-11 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-95 flex items-center justify-center">
           Kembali
         </button>
         <form id="pinjamForm" method="POST" action="{{ route('mahasiswa.peminjaman.store') }}" class="flex-1">
@@ -228,7 +250,7 @@
           <input type="hidden" id="pinjamBorrowHidden" name="tgl_peminjaman" value="">
           <input type="hidden" id="pinjamDueHidden" name="tgl_pengembalian" value="">
           <button type="submit"
-            class="w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 active:scale-95 flex items-center justify-center gap-1.5">
+            class="w-full h-11 rounded-xl bg-emerald-500 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 active:scale-95 flex items-center justify-center gap-1.5">
             <i class="bi bi-book"></i> Pinjam
           </button>
         </form>
@@ -338,6 +360,8 @@ function openPinjamModal(book) {
   document.getElementById('pinjamCode').textContent   = book.nomor_panggil || book.code || '—';
   document.getElementById('pinjamTitle').textContent  = book.title  || '—';
   document.getElementById('pinjamAuthor').textContent = book.author || '—';
+  document.getElementById('pinjamIsbn').textContent   = book.isbn   || '—';
+  document.getElementById('pinjamRack').textContent   = book.rack   || '—';
   document.getElementById('pinjamKodeBuku').value     = book.id     || '';
 
   recalcDueDate();   // set due + badge + hidden fields

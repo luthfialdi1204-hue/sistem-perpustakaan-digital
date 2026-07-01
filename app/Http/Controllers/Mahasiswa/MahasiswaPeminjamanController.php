@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Mahasiswa;
 
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\FormatsBuku;
 use App\Http\Controllers\Concerns\FormatsPeminjaman;
 use App\Models\Buku;
@@ -9,7 +10,6 @@ use App\Models\DetailPeminjaman;
 use App\Models\Peminjaman;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 

@@ -90,14 +90,14 @@
           <p class="mt-1.5 flex items-center gap-1 text-xs text-rose-200"><i class="bi bi-exclamation-circle"></i>{{ $adminErrors->first('password') }}</p>
         @endif
       </div>
-      <a href="{{ route('password.forgot', ['role' => 'admin']) }}" class="flex items-center gap-1.5 text-sm text-violet-200 transition hover:text-white">
+      <a href="{{ route('password.forgot', ['role' => 'admin']) }}" class="flex items-center gap-1.5 text-sm text-amber-100 transition hover:text-white">
         <i class="bi bi-question-circle"></i> Lupa password?
       </a>
       <div class="flex items-center justify-between pt-1">
         <a href="{{ url('/') }}" class="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/20 px-4 py-2 text-sm text-white transition hover:bg-white/30">
           <i class="bi bi-arrow-left"></i> Kembali
         </a>
-        <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-violet-900 via-violet-700 to-violet-600 px-5 py-2 text-sm font-medium text-white shadow-lg transition hover:brightness-110">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-brand via-brand-light to-teal-600 px-5 py-2 text-sm font-medium text-white shadow-lg transition hover:brightness-105">
           <i class="bi bi-shield-check"></i> Masuk
         </button>
       </div>

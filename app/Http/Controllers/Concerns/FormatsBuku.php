@@ -118,9 +118,9 @@ trait FormatsBuku
             mkdir($dir, 0755, true);
         }
 
-        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-        if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
-            $ext = 'jpg';
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
+        if (! in_array($ext, ['png'], true)) {
+            $ext = 'png';
         }
 
         $name = 'buku_'.$kode.'_'.time().'.'.$ext;

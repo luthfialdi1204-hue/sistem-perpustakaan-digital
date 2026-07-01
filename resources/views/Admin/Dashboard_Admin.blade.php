@@ -107,7 +107,7 @@
           <tr class="hover:bg-slate-50/80 transition-colors">
             <td class="px-3 py-2.5 align-middle">
               <div class="flex items-center gap-2 min-w-[140px]">
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-900/10 text-indigo-900 text-xs font-bold">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1E376E]/10 text-[#1E376E] text-xs font-bold">
                   {{ $row['initials'] ?? '—' }}
                 </div>
                 <div>

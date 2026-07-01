@@ -1,19 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ProfilController extends Controller
 {
-    /** Halaman profil mahasiswa */
-    public function mahasiswa()
-    {
-        return view('Mahasiswa.Profil_Mahasiswa');
-    }
-
     /** Halaman profil admin */
     public function admin()
     {
@@ -22,7 +17,6 @@ class ProfilController extends Controller
 
     /**
      * Upload / ganti foto profil.
-     * POST /profil/foto  (mahasiswa)
      * POST /admin/profil/foto  (admin)
      */
     public function uploadFoto(Request $request)
@@ -50,14 +44,11 @@ class ProfilController extends Controller
         $user->foto_profil = $path;
         $user->save();
 
-        $route = $user->isAdmin() ? 'admin.profil' : 'mahasiswa.profil';
-
-        return redirect()->route($route)->with('success', 'Foto profil berhasil diperbarui.');
+        return redirect()->route('admin.profil')->with('success', 'Foto profil berhasil diperbarui.');
     }
 
     /**
      * Hapus foto profil (kembali ke inisial).
-     * DELETE /profil/foto  (mahasiswa)
      * DELETE /admin/profil/foto  (admin)
      */
     public function hapusFoto(Request $request)
@@ -72,8 +63,6 @@ class ProfilController extends Controller
         $user->foto_profil = null;
         $user->save();
 
-        $route = $user->isAdmin() ? 'admin.profil' : 'mahasiswa.profil';
-
-        return redirect()->route($route)->with('success', 'Foto profil berhasil dihapus.');
+        return redirect()->route('admin.profil')->with('success', 'Foto profil berhasil dihapus.');
     }
 }

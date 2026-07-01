@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\FormatsBuku;
 use App\Http\Controllers\Concerns\FormatsPeminjaman;
 use App\Models\DetailPeminjaman;
@@ -17,7 +18,7 @@ class LaporanAdminController extends Controller
     {
         $this->syncOverdueStatuses();
 
-        $perPage = 5;
+        $perPage = 10;
         $page = (int) $request->input('page', 1);
         if ($page < 1) {
             $page = 1;
@@ -35,6 +36,7 @@ class LaporanAdminController extends Controller
             $query->whereDate('tgl_Peminjaman', '<=', $end);
         }
 
+        $allQuery = $query->clone();
         $paginated = $query->paginate($perPage)->appends($request->query());
         $rows = $paginated->getCollection()->map(function (DetailPeminjaman $d) {
             $row = $this->formatPeminjamanRow($d);
@@ -47,7 +49,7 @@ class LaporanAdminController extends Controller
         })->values();
 
 
-        $all = $query->clone()->get()->map(function (DetailPeminjaman $d) {
+        $all = $allQuery->get()->map(function (DetailPeminjaman $d) {
             $row = $this->formatPeminjamanRow($d);
             if (($row['status'] ?? '') === 'Terlambat' && ($row['telat'] ?? '') !== '') {
                 $row['telatNote'] = 'Telat '.$row['telat'];
@@ -56,6 +58,32 @@ class LaporanAdminController extends Controller
             $row['dueAt']    = $row['dueIso'] ? \Carbon\Carbon::parse($row['dueIso'])->translatedFormat('d/F/Y') : '—';
             return $row;
         })->values();
+
+        $topFines = collect($all)->map(function ($row) {
+            $raw = (string) ($row['denda'] ?? '');
+            $amt = 0;
+            if ($raw !== '' && $raw !== '—') {
+                $amt = (int) preg_replace('/\D+/', '', $raw);
+            }
+            return [
+                'member' => $row['member'] ?? '',
+                'amt' => $amt,
+            ];
+        })
+        ->filter(fn($x) => $x['amt'] > 0)
+        ->groupBy('member')
+        ->map(function ($items, $member) {
+            $totalAmt = $items->sum('amt');
+            return [
+                'member' => $member,
+                'amt' => $totalAmt,
+                'denda' => 'Rp' . number_format($totalAmt, 0, ',', '.'),
+            ];
+        })
+        ->sortByDesc('amt')
+        ->take(5)
+        ->values()
+        ->toArray();
 
         $allStats = DetailPeminjaman::all()->map(function (DetailPeminjaman $d) {
             return $this->formatPeminjamanRow($d);
@@ -80,6 +108,7 @@ class LaporanAdminController extends Controller
 
         return view('Admin.laporan_admin', [
             'rows' => $rows,
+            'top_fines' => $topFines,
             'meta' => [
                 'current_page' => $paginated->currentPage(),
                 'last_page' => $paginated->lastPage(),
@@ -110,9 +139,9 @@ class LaporanAdminController extends Controller
     {
         $this->syncOverdueStatuses();
 
-        $perPage = (int) $request->input('per_page', 5);
+        $perPage = (int) $request->input('per_page', 10);
         if ($perPage < 1) {
-            $perPage = 5;
+            $perPage = 10;
         }
         if ($perPage > 10000) {
             $perPage = 10000;
@@ -200,4 +229,3 @@ class LaporanAdminController extends Controller
         ]);
     }
 }
-

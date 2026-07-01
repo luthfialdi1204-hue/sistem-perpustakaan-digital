@@ -169,7 +169,7 @@
             <tbody class="divide-y divide-slate-100">
               @foreach(($rows ?? []) as $i => $row)
                 <tr class="hover:bg-slate-50/80 transition-colors">
-                  <td class="px-3 py-2.5 text-slate-500 text-xs">{{ (($meta['current_page'] ?? 1) - 1) * ($meta['per_page'] ?? 5) + $i + 1 }}</td>
+                  <td class="px-3 py-2.5 text-slate-500 text-xs">{{ (($meta['current_page'] ?? 1) - 1) * ($meta['per_page'] ?? 10) + $i + 1 }}</td>
                   <td class="px-3 py-2.5">
                     <span class="font-medium text-slate-800 text-xs">{{ $row['member'] ?? '' }}</span>
                   </td>
@@ -203,15 +203,37 @@
             $last = (int)($meta['last_page'] ?? 1);
           @endphp
           @if($last > 1)
-            <div class="flex flex-wrap items-center justify-center gap-1 text-sm">
-              <div class="inline-flex overflow-hidden rounded-lg border border-slate-200">
-                @for($p = 1; $p <= $last; $p++)
+            <div class="flex flex-wrap items-center justify-center gap-2 text-sm">
+              @if($current > 1)
+                <a href="{{ route('admin.laporan', array_merge(request()->query(), ['page' => $current - 1])) }}"
+                  class="flex items-center justify-center h-10 px-4 rounded-xl border border-slate-200 bg-white text-[#1E376E] font-semibold transition hover:bg-slate-50 shadow-sm text-xs gap-1">
+                  ← Prev
+                </a>
+              @endif
+
+              @php
+                $start = $current === 1 ? 1 : max(1, min($current - 1, $last - 1));
+                $end = $current === 1 ? min(2, $last) : min($current, $last);
+              @endphp
+              @for($p = $start; $p <= $end; $p++)
+                @if($p === $current)
+                  <span class="flex items-center justify-center h-10 w-10 rounded-xl bg-[#1E376E] text-white font-semibold shadow-sm text-xs">
+                    {{ $p }}
+                  </span>
+                @else
                   <a href="{{ route('admin.laporan', array_merge(request()->query(), ['page' => $p])) }}"
-                    class="border-r border-slate-200 px-4 py-1.5 text-xs {{ $p === $current ? 'bg-[#1E376E] text-white' : 'bg-white text-slate-700 hover:bg-slate-50' }}">
+                    class="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-[#1E376E] font-semibold transition hover:bg-slate-50 shadow-sm text-xs">
                     {{ $p }}
                   </a>
-                @endfor
-              </div>
+                @endif
+              @endfor
+
+              @if($current < $last)
+                <a href="{{ route('admin.laporan', array_merge(request()->query(), ['page' => $current + 1])) }}"
+                  class="flex items-center justify-center h-10 px-4 rounded-xl bg-[#1E376E] text-white font-semibold shadow-sm transition hover:bg-[#162d5c] text-xs gap-1">
+                  Next →
+                </a>
+              @endif
             </div>
           @endif
         </div>
@@ -253,7 +275,7 @@
       <div class="space-y-3">
         <div><label class="mb-1 block text-xs font-semibold text-slate-600">Nama Peminjam</label>
         <input id="detailMember" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>
-        <div><label class="mb-1 block text-xs font-semibold text-slate-600">Kode Buku</label>
+        <div><label class="mb-1 block text-xs font-semibold text-slate-600">Nomor Panggil</label>
         <input id="detailBookCode" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>
         <div><label class="mb-1 block text-xs font-semibold text-slate-600">Judul Buku</label>
         <input id="detailBookTitle" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>
@@ -261,6 +283,10 @@
         <input id="detailAuthor" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>
         <div><label class="mb-1 block text-xs font-semibold text-slate-600">Kategori</label>
         <input id="detailCategory" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>
+        <div><label class="mb-1 block text-xs font-semibold text-slate-600">ISBN</label>
+        <input id="detailIsbn" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>
+        <div><label class="mb-1 block text-xs font-semibold text-slate-600">Lokasi Rak</label>
+        <input id="detailRack" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"></div>
         <img id="detailCover" src="" alt="" class="h-40 w-28 rounded-lg border border-slate-200 object-cover shadow-sm">
       </div>
       <div class="space-y-3">
@@ -327,6 +353,7 @@
   /* ── Server data ── */
   const serverStats = @json($stats ?? []);
   const serverRows  = @json($rows ?? []);
+  const serverTopFines = @json($top_fines ?? []);
   const listApiUrl  = @json(route('admin.laporan.list'));
 
   /* ── 1. Doughnut Chart ── */
@@ -408,7 +435,7 @@
       </li>`).join('');
   }
 
-  buildTopFines(serverRows);
+  buildTopFines(serverTopFines);
 
   /* ── 3. Status badges in table ── */
   const BADGES = {
@@ -437,6 +464,8 @@
     document.getElementById('detailBookTitle').value   = row.bookTitle || '';
     document.getElementById('detailAuthor').value      = row.bookAuthor || '';
     document.getElementById('detailCategory').value    = row.category || '';
+    document.getElementById('detailIsbn').value        = row.isbn || '—';
+    document.getElementById('detailRack').value        = row.rack || '—';
     const coverEl = document.getElementById('detailCover');
     if (coverEl) { coverEl.src = row.cover || ''; coverEl.alt = row.bookTitle || ''; }
     document.getElementById('detailStatus').value      = row.status || '';
@@ -497,10 +526,12 @@
   document.getElementById('exportPdfBtn')?.addEventListener('click', () => {
     const fields = [
       ['Nama Peminjam', document.getElementById('detailMember')?.value],
-      ['Kode Buku', document.getElementById('detailBookCode')?.value],
+      ['Nomor Panggil', document.getElementById('detailBookCode')?.value],
       ['Judul Buku', document.getElementById('detailBookTitle')?.value],
       ['Pengarang', document.getElementById('detailAuthor')?.value],
       ['Kategori', document.getElementById('detailCategory')?.value],
+      ['ISBN', document.getElementById('detailIsbn')?.value],
+      ['Lokasi Rak', document.getElementById('detailRack')?.value],
       ['Status', document.getElementById('detailStatus')?.value],
       ['Tgl Peminjaman', document.getElementById('detailBorrowDisplay')?.value],
       ['Tgl Kembali', document.getElementById('detailDueDisplay')?.value],
@@ -521,10 +552,12 @@
   document.getElementById('exportExcelBtn')?.addEventListener('click', () => {
     const fields = [
       ['Nama Peminjam', document.getElementById('detailMember')?.value],
-      ['Kode Buku', document.getElementById('detailBookCode')?.value],
+      ['Nomor Panggil', document.getElementById('detailBookCode')?.value],
       ['Judul Buku', document.getElementById('detailBookTitle')?.value],
       ['Pengarang', document.getElementById('detailAuthor')?.value],
       ['Kategori', document.getElementById('detailCategory')?.value],
+      ['ISBN', document.getElementById('detailIsbn')?.value],
+      ['Lokasi Rak', document.getElementById('detailRack')?.value],
       ['Status', document.getElementById('detailStatus')?.value],
       ['Tgl Peminjaman', document.getElementById('detailBorrowDisplay')?.value],
       ['Tgl Kembali', document.getElementById('detailDueDisplay')?.value],
